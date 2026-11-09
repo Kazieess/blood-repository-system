@@ -74,6 +74,16 @@ class HttpIntegrationTest extends TestCase
             $this->assertSame('HTTP Fictional Donor', json_decode((string) $retrieved->getBody(), true)['data']['name']);
             $this->assertSame(1, DB::connection('http_smoke')->table('donors')->count());
             $this->assertSame(1, DB::connection('http_smoke')->table('audit_logs')->where('action', 'donor.created')->count());
+            $donation = $client->post('/api/v1/donors/'.$id.'/donations', ['headers' => ['X-XSRF-TOKEN' => $token(), 'Idempotency-Key' => (string) Str::uuid()], 'json' => ['reference' => 'HTTP-QA-EVENT', 'donated_on' => now('Asia/Manila')->toDateString(), 'location' => 'Fictional collection']]);
+            $this->assertSame(201, $donation->getStatusCode());
+            $history = $client->get('/api/v1/donors/'.$id.'/donations');
+            $this->assertSame(1, json_decode((string) $history->getBody(), true)['completed_count']);
+            $grant = $client->put('/api/v1/assignments/'.$id, ['headers' => ['X-XSRF-TOKEN' => $token()], 'json' => ['user_id' => $user->id, 'version' => 1, 'clinical_permissions' => ['screening.read', 'screening.write'], 'reason' => 'Fictional HTTP permission test']]);
+            $this->assertSame(200, $grant->getStatusCode());
+            $clinical = $client->post('/api/v1/donors/'.$id.'/clinical/screening', ['headers' => ['X-XSRF-TOKEN' => $token(), 'Idempotency-Key' => (string) Str::uuid()], 'json' => ['source_reference' => 'HTTP-QA-SOURCE', 'observed_at' => now()->subMinute()->toISOString(), 'payload' => ['decision' => 'recorded', 'notes' => 'Fictional private HTTP note']]]);
+            $this->assertSame(201, $clinical->getStatusCode());
+            $this->assertStringNotContainsString('Fictional private HTTP note', DB::connection('http_smoke')->table('clinical_entries')->value('payload'));
+            $this->assertSame(403, $client->get('/api/v1/backups')->getStatusCode());
             $this->assertSame(200, $client->get('/workspace')->getStatusCode());
             $this->assertStringContainsString('src/connected.js', (string) $client->get('/workspace')->getBody());
             $this->assertStringContainsString('--navy', (string) $client->get('/css/styles.css')->getBody());

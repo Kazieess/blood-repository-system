@@ -103,6 +103,23 @@ class ClinicalAccessTest extends TestCase
         $this->getJson('/api/v1/donors/'.$donor->id.'/clinical/eligibility')->assertForbidden();
     }
 
+    public function test_retired_laboratory_fields_cannot_be_silently_dropped_by_a_correction(): void
+    {
+        $admin = $this->staff();
+        $donor = Donor::factory()->create(['created_by' => $admin->id, 'updated_by' => $admin->id]);
+        $this->grant($donor, $admin, ['laboratory.read', 'laboratory.write']);
+        $this->signIn($admin);
+        $field = ['version' => 0, 'key' => 'qa_old', 'label' => 'Fictional old field', 'format' => 'text', 'required' => false, 'active' => true, 'reason' => 'Fictional field'];
+        $old = $this->postJson('/api/v1/clinical-catalog', $field)->assertOk()->json('data');
+        $this->postJson('/api/v1/clinical-catalog', [...$field, 'key' => 'qa_current'])->assertOk();
+        $path = '/api/v1/donors/'.$donor->id.'/clinical/laboratory';
+        $body = [...$this->body(), 'payload' => ['results' => ['qa_old' => 'Original fictional value', 'qa_current' => 'Current fictional value']]];
+        $record = $this->postJson($path, $body, ['Idempotency-Key' => (string) Str::uuid()])->assertCreated()->json('data');
+        $this->postJson('/api/v1/clinical-catalog', [...$field, 'id' => $old['id'], 'version' => 1, 'active' => false])->assertOk();
+        $this->patchJson($path.'/'.$record['id'], [...$body, 'payload' => ['results' => ['qa_current' => 'Changed fictional value']], 'version' => 1, 'reason' => 'Fictional correction'])->assertUnprocessable();
+        $this->getJson($path)->assertOk()->assertJsonPath('data.0.payload.results.qa_old', 'Original fictional value')->assertJsonPath('data.0.version', 1);
+    }
+
     public function test_audit_failure_rolls_back_entry_and_revision(): void
     {
         $admin = $this->staff();

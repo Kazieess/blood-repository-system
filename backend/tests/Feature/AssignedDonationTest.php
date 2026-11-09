@@ -73,6 +73,7 @@ class AssignedDonationTest extends TestCase
         $this->postJson($path, [...$body, 'location' => 'Changed payload'], $headers)->assertConflict();
         $this->postJson($path, $body, ['Idempotency-Key' => (string) Str::uuid()])->assertConflict();
         $this->getJson($path)->assertOk()->assertJsonPath('completed_count', 1);
+        $this->getJson($path.'?to='.$body['donated_on'])->assertOk()->assertJsonPath('meta.total', 1);
         $this->getJson('/api/v1/donors/'.$donor->id)->assertOk()->assertJsonPath('data.donation_count', 1);
         $correction = ['donated_on' => $body['donated_on'], 'location' => $body['location'], 'status' => 'voided', 'version' => 1, 'reason' => 'Duplicate documentary entry'];
         $this->patchJson($path.'/'.$record['id'], $correction)->assertOk()->assertJsonPath('data.version', 2);

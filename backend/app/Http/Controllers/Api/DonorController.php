@@ -40,7 +40,7 @@ class DonorController extends Controller
             $query->where('blood_type', $input['blood_type']);
         }
 
-        return DonorResource::collection($query->orderByDesc('created_at')->orderBy('id')->paginate($input['per_page'] ?? 10)->withQueryString());
+        return DonorResource::collection($query->withCount(['donations as completed_donation_count' => fn ($q) => $q->where('status', 'completed')])->with(['assignments' => fn ($q) => $q->where('user_id', $request->user()->id)->where('active', true)])->orderByDesc('created_at')->orderBy('id')->paginate($input['per_page'] ?? 10)->withQueryString());
     }
 
     public function show(Request $request, string $donor): DonorResource

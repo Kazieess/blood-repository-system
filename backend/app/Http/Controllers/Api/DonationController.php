@@ -26,7 +26,7 @@ class DonationController extends Controller
     public function index(Request $request, string $donor): JsonResponse
     {
         $this->donor($request, $donor);
-        $input = $request->validate(['from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:from'], 'status' => ['nullable', Rule::in(['completed', 'voided'])], 'page' => ['nullable', 'integer', 'min:1']]);
+        $input = $request->validate(['from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d', ...($request->filled('from') ? ['after_or_equal:from'] : [])], 'status' => ['nullable', Rule::in(['completed', 'voided'])], 'page' => ['nullable', 'integer', 'min:1']]);
         $records = Donation::where('donor_id', $donor)->when($input['from'] ?? null, fn ($q, $v) => $q->where('donated_on', '>=', $v))->when($input['to'] ?? null, fn ($q, $v) => $q->where('donated_on', '<=', $v))->when($input['status'] ?? null, fn ($q, $v) => $q->where('status', $v))->orderByDesc('donated_on')->orderBy('id')->paginate(10);
 
         return response()->json(['data' => $records->items(), 'meta' => ['total' => $records->total(), 'current_page' => $records->currentPage(), 'last_page' => $records->lastPage()], 'completed_count' => Donation::where('donor_id', $donor)->where('status', 'completed')->count()]);

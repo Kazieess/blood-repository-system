@@ -134,6 +134,9 @@ class ClinicalController extends Controller
         $extra = $request->validate(['version' => ['required', 'integer', 'min:1'], 'reason' => ['required', 'string', 'min:3', 'max:1000']]);
         $record = DB::transaction(function () use ($request, $donor, $category, $entry, $input, $extra): ClinicalEntry {
             $record = ClinicalEntry::where('donor_id', $donor)->where('category', $category)->findOrFail($entry);
+            if ($category === 'laboratory') {
+                abort_if(array_diff(array_keys($record->payload['results'] ?? []), array_keys($input['payload']['results'] ?? [])) !== [], 422, 'A correction must retain all recorded result fields. Restore the approved field definition before correcting a retired field.');
+            }
             $record->fill([...$input, 'updated_by' => $request->user()->id, 'status' => 'recorded', 'reviewed_by' => null, 'reviewed_at' => null, 'version' => $extra['version'] + 1]);
             $changed = ClinicalEntry::whereKey($entry)->where('version', $extra['version'])->update($record->getDirty());
             abort_if($changed !== 1, 409);

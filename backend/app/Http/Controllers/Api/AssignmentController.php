@@ -19,7 +19,7 @@ class AssignmentController extends Controller
     {
         abort_unless($request->user()->hasPermission('assignments.manage'), 403);
         $input = $request->validate(['donor_id' => ['nullable', 'uuid'], 'page' => ['nullable', 'integer', 'min:1']]);
-        $donors = Donor::query()->when($input['donor_id'] ?? null, fn ($query, $id) => $query->whereKey($id))->select(['id', 'created_at'])->withCount('assignments')->latest()->paginate(10);
+        $donors = Donor::query()->when($input['donor_id'] ?? null, fn ($query, $id) => $query->whereKey($id))->select(['id', 'created_at'])->withCount(['assignments' => fn ($query) => $query->where('active', true)])->latest()->paginate(10);
 
         return response()->json(['data' => $donors->items(), 'meta' => ['total' => $donors->total(), 'current_page' => $donors->currentPage(), 'last_page' => $donors->lastPage()], 'staff' => User::where('active', true)->whereHas('role', fn ($query) => $query->whereIn('name', ['Red Cross Administrator', 'Red Cross Personnel', 'Barangay Health Coordinator']))->get(['id', 'name']), 'clinical_permissions' => DonorAssignment::CLINICAL]);
     }
@@ -37,6 +37,7 @@ class AssignmentController extends Controller
         abort_unless($request->user()->hasPermission('assignments.manage'), 403);
         Donor::findOrFail($donor);
         $input = $request->validate(['user_id' => ['required', 'integer', 'exists:users,id'], 'version' => ['required', 'integer', 'min:0'], 'clinical_permissions' => ['present', 'array', 'max:9'], 'clinical_permissions.*' => ['string', 'distinct', Rule::in(DonorAssignment::CLINICAL)], 'reason' => ['required', 'string', 'min:3', 'max:500'], 'revoke' => ['sometimes', 'boolean']]);
+        $input['version'] = (int) $input['version'];
         $staff = User::findOrFail($input['user_id']);
         abort_unless(! empty($input['revoke']) || $staff->hasPermission('donors.read'), 422, 'Choose active operational staff.');
         DB::transaction(function () use ($request, $donor, $input): void {

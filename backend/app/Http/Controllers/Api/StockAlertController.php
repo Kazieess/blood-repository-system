@@ -30,6 +30,7 @@ class StockAlertController extends Controller
     {
         abort_unless($request->user()->hasPermission('alerts.manage'), 403);
         $input = $request->validate(['id' => ['nullable', 'integer'], 'version' => ['required', 'integer', 'min:0'], 'blood_type' => ['required', Rule::in(['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'])], 'component' => ['required', 'string', 'min:2', 'max:80'], 'location' => ['required', 'string', 'min:2', 'max:100'], 'threshold' => ['required', 'integer', 'between:0,999999'], 'recipient_ids' => ['required', 'array', 'min:1', 'max:100'], 'recipient_ids.*' => ['required', 'integer', 'distinct', 'exists:users,id'], 'active' => ['required', 'boolean'], 'reason' => ['required', 'string', 'min:3', 'max:500']]);
+        $input['recipient_ids'] = array_map('intval', $input['recipient_ids']);
         foreach ($input['recipient_ids'] as $recipient) {
             abort_unless(User::findOrFail($recipient)->hasPermission('inventory.read'), 422, 'Choose active inventory staff.');
         }
@@ -52,7 +53,7 @@ class StockAlertController extends Controller
                 return $record;
             });
         } catch (QueryException $exception) {
-            if (StockRule::where('blood_type', $input['blood_type'])->where('component', $input['component'])->where('location', $input['location'])->exists()) {
+            if (empty($input['id']) && (string) $exception->getCode() === '23000' && StockRule::where('blood_type', $input['blood_type'])->where('component', $input['component'])->where('location', $input['location'])->exists()) {
                 abort(409, 'This stock scope already has a rule.');
             }
             throw $exception;
@@ -73,7 +74,11 @@ class StockAlertController extends Controller
             return ['id' => $alert->id, 'blood_type' => $rule->blood_type, 'component' => $rule->component, 'location' => $rule->location, 'condition' => $alert->condition, 'available_count' => $alert->available_count, 'threshold' => $rule->threshold, 'open' => $alert->open, 'resolved_at' => $alert->resolved_at, 'updated_at' => $alert->updated_at, 'acknowledged_at' => AlertReceipt::where('stock_alert_id', $alert->id)->where('user_id', $request->user()->id)->value('acknowledged_at')];
         });
 
-        return response()->json(['data' => $data, 'meta' => ['total' => $records->total(), 'current_page' => $records->currentPage(), 'last_page' => $records->lastPage()], 'configured_scopes' => $rules->count()]);
+        $unacknowledged = StockAlert::whereIn('stock_rule_id', $rules->pluck('id'))->where('open', true)->whereNotExists(function ($query) use ($request): void {
+            $query->selectRaw('1')->from('alert_receipts')->whereColumn('alert_receipts.stock_alert_id', 'stock_alerts.id')->where('user_id', $request->user()->id)->whereNotNull('acknowledged_at');
+        })->count();
+
+        return response()->json(['data' => $data, 'meta' => ['total' => $records->total(), 'current_page' => $records->currentPage(), 'last_page' => $records->lastPage()], 'configured_scopes' => $rules->count(), 'unacknowledged_open_count' => $unacknowledged]);
     }
 
     public function acknowledge(Request $request, int $alert): JsonResponse

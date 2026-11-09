@@ -2,6 +2,6 @@
 
 return [
     'allow_clinical_self_review' => false,
-    'backup_at' => env('REPOSITORY_BACKUP_AT'),
-    'backup_max_bytes' => 100 * 1024 * 1024,
+    'backup_at' => env('REPOSITORY_BACKUP_AT') ?: null,
+    'backup_max_bytes' => 16 * 1024 * 1024,
 ];

@@ -8,7 +8,9 @@ use App\Models\Donor;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use PDO;
 use Tests\TestCase;
@@ -44,6 +46,9 @@ class BackupRecoveryTest extends TestCase
     {
         $operator = $this->staff('Red Cross Administrator');
         $donor = Donor::factory()->create(['created_by' => $operator->id, 'updated_by' => $operator->id, 'name' => 'Fictional recovery donor']);
+        $this->signIn($operator);
+        $donor->assignments()->where('user_id', $operator->id)->update(['clinical_permissions' => json_encode(['screening.read', 'screening.write'])]);
+        $this->postJson('/api/v1/donors/'.$donor->id.'/clinical/screening', ['source_reference' => 'QA-RECOVERY-SOURCE', 'observed_at' => now()->subMinute()->toISOString(), 'payload' => ['decision' => 'recorded', 'notes' => 'Fictional recovered clinical note']], ['Idempotency-Key' => (string) Str::uuid()])->assertCreated();
         $admin = $this->staff('System Administrator');
         $this->signIn($admin);
         $key = (string) Str::uuid();
@@ -62,6 +67,10 @@ class BackupRecoveryTest extends TestCase
         $this->ownedArtifacts[] = $target;
         $pdo = new PDO('sqlite:'.$target);
         $this->assertSame('Fictional recovery donor', $pdo->query('SELECT name FROM donors')->fetchColumn());
+        $this->assertTrue(Hash::check('password', $pdo->query('SELECT password FROM users ORDER BY id LIMIT 1')->fetchColumn()));
+        $recoveredClinical = json_decode(Crypt::decryptString($pdo->query('SELECT payload FROM clinical_entries')->fetchColumn()), true);
+        $this->assertSame('Fictional recovered clinical note', $recoveredClinical['notes']);
+        $this->assertSame(1, (int) $pdo->query('SELECT COUNT(*) FROM donor_assignments WHERE active = 1')->fetchColumn());
         $pdo = null;
         $this->assertDatabaseHas('donors', ['id' => $donor->id]);
         $this->getJson('/api/v1/backups')->assertOk()->assertJsonMissingPath('data.0.checksum')->assertJsonMissingPath('data.0.payload');

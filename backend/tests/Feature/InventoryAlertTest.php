@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
 use App\Actions\StockEvaluator;
 use App\Models\AuditLog;
 use App\Models\Role;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
@@ -88,6 +88,7 @@ class InventoryAlertTest extends TestCase
         $this->signIn($worker);
         $first = $this->getJson('/api/v1/stock-alerts')->assertOk()->assertJsonPath('data.0.condition', 'out_of_stock')->json('data.0.id');
         $this->postJson('/api/v1/stock-alerts/'.$first.'/acknowledge')->assertOk();
+        $this->getJson('/api/v1/stock-alerts')->assertOk()->assertJsonPath('unacknowledged_open_count', 0);
         $a = $this->unit('QA-ALERT-A');
         $this->transition($a, 'verify', 1)->assertOk();
         $this->getJson('/api/v1/stock-alerts')->assertOk()->assertJsonPath('data.0.condition', 'low_stock')->assertJsonPath('data.0.acknowledged_at', null);
@@ -113,6 +114,24 @@ class InventoryAlertTest extends TestCase
         $this->travelTo(CarbonImmutable::parse('2026-11-09T01:00:00Z'));
         $this->artisan('stock:evaluate')->assertSuccessful();
         $this->getJson('/api/v1/stock-alerts')->assertOk()->assertJsonPath('data.0.condition', 'out_of_stock');
+    }
+
+    public function test_rule_update_database_errors_are_not_mislabeled_as_duplicate_scope(): void
+    {
+        $admin = $this->staff();
+        $this->signIn($admin);
+        $body = ['version' => 0, 'blood_type' => 'O+', 'component' => 'Fictional component', 'location' => 'Fictional store', 'threshold' => 1, 'recipient_ids' => [$admin->id], 'active' => true, 'reason' => 'Fictional rule'];
+        $record = $this->postJson('/api/v1/stock-rules', $body)->assertOk()->json('data');
+        $this->postJson('/api/v1/stock-rules', $body)->assertConflict();
+        AuditLog::creating(function (): void {
+            DB::statement('SELECT * FROM intentionally_missing_test_table');
+        });
+        try {
+            $this->postJson('/api/v1/stock-rules', [...$body, 'id' => $record['id'], 'version' => 1, 'threshold' => 99])->assertStatus(500);
+            $this->assertDatabaseHas('stock_rules', ['id' => $record['id'], 'threshold' => 1, 'version' => 1]);
+        } finally {
+            AuditLog::flushEventListeners();
+        }
     }
 
     public function test_retry_atomic_failure_and_permission_boundaries(): void

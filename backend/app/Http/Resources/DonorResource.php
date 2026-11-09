@@ -16,8 +16,8 @@ class DonorResource extends JsonResource
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),
             'can_update' => $request->user()->can('update', $this->resource),
-            'donation_count' => $this->donations()->where('status', 'completed')->count(),
-            'clinical_permissions' => $this->assignments()->where('user_id', $request->user()->id)->first()?->clinical_permissions ?? [],
+            'donation_count' => $this->completed_donation_count ?? $this->donations()->where('status', 'completed')->count(),
+            'clinical_permissions' => ($this->relationLoaded('assignments') ? $this->assignments->first() : $this->assignments()->where('user_id', $request->user()->id)->where('active', true)->first())?->clinical_permissions ?? [],
         ];
     }
 }
