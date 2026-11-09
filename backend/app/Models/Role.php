@@ -23,10 +23,10 @@ class Role extends Model
     public function permissions(): array
     {
         return match ($this->name) {
-            'Red Cross Administrator' => ['donors.read', 'donors.create', 'donors.update', 'donors.all', 'audit.read'],
-            'Red Cross Personnel' => ['donors.read', 'donors.create', 'donors.update', 'donors.all'],
+            'Red Cross Administrator' => ['donors.read', 'donors.create', 'donors.update', 'assignments.manage', 'inventory.read', 'inventory.write', 'alerts.manage', 'clinical.catalog', 'audit.read'],
+            'Red Cross Personnel' => ['donors.read', 'donors.create', 'donors.update', 'inventory.read', 'inventory.write'],
             'Barangay Health Coordinator' => ['donors.read', 'donors.create', 'donors.update'],
-            'System Administrator' => ['audit.read'],
+            'System Administrator' => ['audit.read', 'backups.manage'],
             default => [],
         };
     }

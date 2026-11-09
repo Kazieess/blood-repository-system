@@ -1,0 +1,140 @@
+<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+use App\Actions\StockEvaluator;
+use App\Models\AuditLog;
+use App\Models\Role;
+use App\Models\User;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
+use Tests\TestCase;
+
+class InventoryAlertTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function staff(string $role = 'Red Cross Administrator'): User
+    {
+        return User::factory()->create(['role_id' => Role::firstOrCreate(['name' => $role])->id, 'active' => true]);
+    }
+
+    private function signIn(User $user): void
+    {
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($user, 'web');
+    }
+
+    private function unit(string $reference, int $hours = 2): array
+    {
+        return $this->postJson('/api/v1/inventory', ['reference' => $reference, 'blood_type' => 'O+', 'component' => 'Fictional component', 'location' => 'Fictional store', 'collected_at' => now()->subDay()->toISOString(), 'expires_at' => now()->addHours($hours)->toISOString(), 'reason' => 'Documented fictional unit'], ['Idempotency-Key' => (string) Str::uuid()])->assertCreated()->json('data');
+    }
+
+    private function transition(array $unit, string $action, int $version): TestResponse
+    {
+        return $this->postJson('/api/v1/inventory/'.$unit['id'].'/transitions', ['action' => $action, 'version' => $version, 'verification_confirmed' => true, 'reason' => 'Authorized fictional action']);
+    }
+
+    public function test_units_require_verification_exclude_spoiled_and_reject_repeat_or_stale_release(): void
+    {
+        $this->signIn($this->staff());
+        $unit = $this->unit('QA-STATE');
+        $this->getJson('/api/v1/inventory?status=available')->assertOk()->assertJsonPath('meta.total', 0);
+        $this->transition($unit, 'release', 1)->assertConflict();
+        $this->postJson('/api/v1/inventory/'.$unit['id'].'/transitions', ['action' => 'verify', 'version' => 1, 'verification_confirmed' => false, 'reason' => 'Fictional check'])->assertUnprocessable();
+        $this->transition($unit, 'verify', 1)->assertOk()->assertJsonPath('data.status', 'available');
+        $this->transition($unit, 'release', 1)->assertConflict();
+        $this->transition($unit, 'spoil', 2)->assertOk()->assertJsonPath('data.status', 'spoiled');
+        $this->getJson('/api/v1/inventory?status=available')->assertOk()->assertJsonPath('available_total', 0);
+        $this->transition($unit, 'release', 3)->assertConflict();
+        $this->transition($unit, 'discard', 3)->assertOk();
+        $this->transition($unit, 'discard', 4)->assertConflict();
+        $this->getJson('/api/v1/inventory/'.$unit['id'])->assertOk()->assertJsonCount(4, 'data.history')->assertJsonMissingPath('data.creation_key');
+    }
+
+    public function test_expiry_order_and_exact_boundary_use_only_approved_available_units(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-09T00:00:00Z'));
+        $this->signIn($this->staff());
+        $later = $this->unit('QA-LATER', 3);
+        $earlier = $this->unit('QA-EARLIER', 1);
+        $pending = $this->unit('QA-PENDING', 2);
+        $this->transition($later, 'verify', 1)->assertOk();
+        $this->transition($earlier, 'verify', 1)->assertOk();
+        $this->getJson('/api/v1/inventory?status=available')->assertOk()->assertJsonPath('data.0.reference', 'QA-EARLIER')->assertJsonPath('meta.total', 2);
+        $this->travelTo(CarbonImmutable::parse('2026-11-09T01:00:00Z'));
+        $this->transition($earlier, 'release', 2)->assertConflict();
+        $this->getJson('/api/v1/inventory?status=available')->assertOk()->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.reference', 'QA-LATER');
+        $this->getJson('/api/v1/inventory?status=expired')->assertOk()->assertJsonPath('data.0.reference', 'QA-EARLIER');
+    }
+
+    public function test_scoped_alerts_deduplicate_acknowledge_resolve_and_reopen(): void
+    {
+        $admin = $this->staff();
+        $worker = $this->staff('Red Cross Personnel');
+        $other = $this->staff('Red Cross Personnel');
+        $this->signIn($admin);
+        $rule = ['version' => 0, 'blood_type' => 'O+', 'component' => 'Fictional component', 'location' => 'Fictional store', 'threshold' => 1, 'recipient_ids' => [$worker->id], 'active' => true, 'reason' => 'Approved fictional threshold'];
+        $this->postJson('/api/v1/stock-rules', $rule)->assertOk();
+        app(StockEvaluator::class)->evaluate();
+        app(StockEvaluator::class)->evaluate();
+        $this->assertDatabaseCount('stock_alerts', 1);
+        $this->signIn($other);
+        $this->getJson('/api/v1/stock-alerts')->assertOk()->assertJsonPath('meta.total', 0);
+        $this->postJson('/api/v1/stock-alerts/1/acknowledge')->assertNotFound();
+        $this->signIn($worker);
+        $first = $this->getJson('/api/v1/stock-alerts')->assertOk()->assertJsonPath('data.0.condition', 'out_of_stock')->json('data.0.id');
+        $this->postJson('/api/v1/stock-alerts/'.$first.'/acknowledge')->assertOk();
+        $a = $this->unit('QA-ALERT-A');
+        $this->transition($a, 'verify', 1)->assertOk();
+        $this->getJson('/api/v1/stock-alerts')->assertOk()->assertJsonPath('data.0.condition', 'low_stock')->assertJsonPath('data.0.acknowledged_at', null);
+        $b = $this->unit('QA-ALERT-B');
+        $this->transition($b, 'verify', 1)->assertOk();
+        $this->assertDatabaseHas('stock_alerts', ['id' => $first, 'open' => false]);
+        $this->transition($a, 'release', 2)->assertOk();
+        $this->assertDatabaseCount('stock_alerts', 2);
+        $this->transition($b, 'spoil', 2)->assertOk();
+        $this->getJson('/api/v1/stock-alerts')->assertOk()->assertJsonPath('data.0.condition', 'out_of_stock');
+        $this->postJson('/api/v1/stock-rules', $rule)->assertForbidden();
+    }
+
+    public function test_scheduled_expiry_changes_alerts_without_a_user_write(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-11-09T00:00:00Z'));
+        $admin = $this->staff();
+        $this->signIn($admin);
+        $unit = $this->unit('QA-CLOCK', 1);
+        $this->transition($unit, 'verify', 1)->assertOk();
+        $this->postJson('/api/v1/stock-rules', ['version' => 0, 'blood_type' => 'O+', 'component' => 'Fictional component', 'location' => 'Fictional store', 'threshold' => 0, 'recipient_ids' => [$admin->id], 'active' => true, 'reason' => 'Fictional zero threshold'])->assertOk();
+        $this->assertDatabaseCount('stock_alerts', 0);
+        $this->travelTo(CarbonImmutable::parse('2026-11-09T01:00:00Z'));
+        $this->artisan('stock:evaluate')->assertSuccessful();
+        $this->getJson('/api/v1/stock-alerts')->assertOk()->assertJsonPath('data.0.condition', 'out_of_stock');
+    }
+
+    public function test_retry_atomic_failure_and_permission_boundaries(): void
+    {
+        $this->signIn($this->staff('System Administrator'));
+        $this->getJson('/api/v1/inventory')->assertForbidden();
+        $this->signIn($this->staff());
+        $body = ['reference' => 'QA-RETRY', 'blood_type' => 'B+', 'component' => 'Fictional component', 'location' => 'Fictional store', 'collected_at' => now()->subDay()->toISOString(), 'expires_at' => now()->addDay()->toISOString(), 'reason' => 'Fictional unit'];
+        $headers = ['Idempotency-Key' => (string) Str::uuid()];
+        $id = $this->postJson('/api/v1/inventory', $body, $headers)->assertCreated()->json('data.id');
+        $this->postJson('/api/v1/inventory', $body, $headers)->assertOk()->assertJsonPath('data.id', $id);
+        $this->postJson('/api/v1/inventory', [...$body, 'reference' => 'QA-CHANGED'], $headers)->assertConflict();
+        AuditLog::creating(function (): void {
+            throw new \RuntimeException('Fictional audit failure');
+        });
+        try {
+            $this->transition(['id' => $id], 'verify', 1)->assertStatus(500);
+            $this->assertDatabaseHas('blood_units', ['id' => $id, 'status' => 'pending', 'version' => 1]);
+            $this->assertDatabaseCount('inventory_events', 1);
+        } finally {
+            AuditLog::flushEventListeners();
+        }
+
+    }
+}

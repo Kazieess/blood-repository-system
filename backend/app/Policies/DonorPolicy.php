@@ -14,7 +14,7 @@ class DonorPolicy
 
     public function view(User $user, Donor $donor): bool
     {
-        return $user->hasPermission('donors.read') && ($user->hasPermission('donors.all') || $donor->created_by === $user->id);
+        return $user->hasPermission('donors.read') && $donor->assignments()->where('user_id', $user->id)->where('active', true)->exists();
     }
 
     public function create(User $user): bool
