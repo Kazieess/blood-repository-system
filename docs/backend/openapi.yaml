@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: Blood Repository Foundation API
-  version: 1.0.0
-  description: Authentication, scoped donor records and restricted audit. Development data only until requirements approval.
+  title: Blood Repository Connected API
+  version: 1.1.0
+  description: Session authentication, assigned donor records, donation history, controlled inventory, recipient alerts, restricted clinical entries and local SQLite recovery. Detailed operational paths and schemas are referenced from operations.openapi.json; see OPERATIONS.md for privacy and deployment limits.
 servers:
   - url: http://127.0.0.1:8000
 security:
@@ -13,14 +13,14 @@ paths:
       security: []
       summary: Initialize session and XSRF-TOKEN cookie
       responses:
-        '204': {description: CSRF cookie initialized}
+        '204': {description: "CSRF cookie initialized"}
   /api/v1/health:
     get:
       security: []
       summary: Minimal health result without infrastructure details
       responses:
-        '200': {description: Application and database reachable}
-        '503': {description: Service unavailable}
+        '200': {description: "Application and database reachable"}
+        '503': {description: "Service unavailable"}
   /api/v1/auth/login:
     post:
       security: []
@@ -37,22 +37,22 @@ paths:
                 email: {type: string, format: email}
                 password: {type: string}
       responses:
-        '200': {description: Current user and action permissions}
-        '422': {description: Generic invalid or inactive credentials, or validation error}
-        '419': {description: Missing or expired CSRF state}
-        '429': {description: Too many attempts; honor Retry-After}
+        '200': {description: "Current user and action permissions"}
+        '422': {description: "Generic invalid or inactive credentials, or validation error"}
+        '419': {description: "Missing or expired CSRF state"}
+        '429': {description: "Too many attempts; honor Retry-After"}
   /api/v1/auth/logout:
     post:
       summary: Invalidate the current session
       responses:
-        '204': {description: Signed out}
-        '401': {description: Not authenticated}
+        '204': {description: "Signed out"}
+        '401': {description: "Not authenticated"}
   /api/v1/me:
     get:
       summary: Get current account and explicit action permissions
       responses:
-        '200': {description: User data without password or remember token}
-        '401': {description: Unauthenticated or account deactivated}
+        '200': {description: "User data without password or remember token"}
+        '401': {description: "Unauthenticated or account deactivated"}
   /api/v1/donors:
     get:
       summary: Paginated donor search within the caller's permitted scope
@@ -62,10 +62,10 @@ paths:
         - {in: query, name: page, schema: {type: integer, minimum: 1}}
         - {in: query, name: per_page, schema: {type: integer, minimum: 1, maximum: 50, default: 10}}
       responses:
-        '200': {description: Donor resources with data, links and meta pagination fields}
-        '401': {description: Not authenticated}
-        '403': {description: Role has no donor-read permission}
-        '422': {description: Invalid filters}
+        '200': {description: "Donor resources with data, links and meta pagination fields"}
+        '401': {description: "Not authenticated"}
+        '403': {description: "Role has no donor-read permission"}
+        '422': {description: "Invalid filters"}
     post:
       summary: Register a donor and audit the write atomically
       parameters:
@@ -79,12 +79,12 @@ paths:
           application/json:
             schema: {$ref: '#/components/schemas/DonorInput'}
       responses:
-        '201': {description: Donor created}
-        '200': {description: Same key and original payload replayed; existing donor returned}
-        '409': {description: Key reused with a different creation payload}
-        '401': {description: Not authenticated}
-        '403': {description: Not permitted to create donors}
-        '422': {description: Invalid input or missing idempotency key}
+        '201': {description: "Donor created"}
+        '200': {description: "Same key and original payload replayed; existing donor returned"}
+        '409': {description: "Key reused with a different creation payload"}
+        '401': {description: "Not authenticated"}
+        '403': {description: "Not permitted to create donors"}
+        '422': {description: "Invalid input or missing idempotency key"}
   /api/v1/donors/{donor}:
     parameters:
       - {in: path, name: donor, required: true, schema: {type: string, format: uuid}}
@@ -99,8 +99,8 @@ paths:
                 type: object
                 properties:
                   data: {$ref: '#/components/schemas/Donor'}
-        '404': {description: Missing or outside the caller's record scope}
-        '403': {description: Role has no donor-read permission}
+        '404': {description: "Missing or outside the caller\u0027s record scope"}
+        '403': {description: "Role has no donor-read permission"}
     patch:
       summary: Correct a donor using the current version and a required reason
       requestBody:
@@ -116,11 +116,11 @@ paths:
                     version: {type: integer, minimum: 1}
                     reason: {type: string, minLength: 3, maxLength: 500}
       responses:
-        '200': {description: Updated resource with incremented version}
-        '409': {description: Stale version; retrieve the current record before retrying}
-        '404': {description: Missing or inaccessible record}
-        '403': {description: Not permitted to correct donors}
-        '422': {description: Invalid input or attempted server-owned field injection}
+        '200': {description: "Updated resource with incremented version"}
+        '409': {description: "Stale version; retrieve the current record before retrying"}
+        '404': {description: "Missing or inaccessible record"}
+        '403': {description: "Not permitted to correct donors"}
+        '422': {description: "Invalid input or attempted server-owned field injection"}
   /api/v1/audit-logs:
     get:
       summary: Restricted paginated activity log
@@ -129,8 +129,44 @@ paths:
         - {in: query, name: page, schema: {type: integer, minimum: 1}}
         - {in: query, name: per_page, schema: {type: integer, minimum: 1, maximum: 50}}
       responses:
-        '200': {description: Redacted audit resources with actor label, action, subject ID, reason, changed field names, request ID and UTC timestamps}
-        '403': {description: Audit permission required}
+        '200': {description: "Redacted audit resources with actor label, action, subject ID, reason, changed field names, request ID and UTC timestamps"}
+        '403': {description: "Audit permission required"}
+  /api/v1/assignments:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1assignments'
+  /api/v1/assignments/{donor}:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1assignments~1{donor}'
+  /api/v1/donors/{donor}/donations:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1donors~1{donor}~1donations'
+  /api/v1/donors/{donor}/donations/{donation}:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1donors~1{donor}~1donations~1{donation}'
+  /api/v1/inventory:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1inventory'
+  /api/v1/inventory/{unit}:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1inventory~1{unit}'
+  /api/v1/inventory/{unit}/transitions:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1inventory~1{unit}~1transitions'
+  /api/v1/stock-rules:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1stock-rules'
+  /api/v1/stock-alerts:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1stock-alerts'
+  /api/v1/stock-alerts/reconcile:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1stock-alerts~1reconcile'
+  /api/v1/stock-alerts/{alert}/acknowledge:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1stock-alerts~1{alert}~1acknowledge'
+  /api/v1/clinical-catalog:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1clinical-catalog'
+  /api/v1/donors/{donor}/clinical/{category}:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1donors~1{donor}~1clinical~1{category}'
+  /api/v1/donors/{donor}/clinical/{category}/{entry}:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1donors~1{donor}~1clinical~1{category}~1{entry}'
+  /api/v1/donors/{donor}/clinical/{category}/{entry}/review:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1donors~1{donor}~1clinical~1{category}~1{entry}~1review'
+  /api/v1/donors/{donor}/clinical/{category}/{entry}/history:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1donors~1{donor}~1clinical~1{category}~1{entry}~1history'
+  /api/v1/backups:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1backups'
+  /api/v1/backups/{backup}/restore-copy:
+    $ref: './operations.openapi.json#/paths/~1api~1v1~1backups~1{backup}~1restore-copy'
 components:
   securitySchemes:
     sessionCookie:
@@ -160,6 +196,8 @@ components:
             created_at: {type: string, format: date-time}
             updated_at: {type: string, format: date-time}
             can_update: {type: boolean}
+            donation_count: {type: integer, minimum: 0, description: Recorded completed events only; historical coverage may be incomplete}
+            clinical_permissions: {type: array, items: {type: string}, description: Separate clinical grants for the caller on this donor; no clinical results included}
     Error:
       type: object
       required: [message, code, request_id]

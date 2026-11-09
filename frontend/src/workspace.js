@@ -2,6 +2,8 @@ import { api, ApiError } from './api.js';
 import { escapeHtml as e, icon, initials } from './ui.js';
 import * as view from './workspace-ui.js';
 import * as editor from './workspace-forms.js';
+import { WorkspaceOperations, toInstant } from './workspace-operations.js';
+import { labels as operationLabels } from './operations-views.js';
 
 const main = document.querySelector('#main');
 const dialog = document.querySelector('#record-dialog');
@@ -9,8 +11,9 @@ if (!(main instanceof HTMLElement) || !(dialog instanceof HTMLDialogElement)) th
 let user = null; let currentDonor = null; let editingDonor = null; let latestConflict = null;
 let pendingKey = null; let initialValues = ''; let loadController; let generation = 0; let lastTrigger;
 let loadedAudit = []; let toastTimer; let renderedHash = ''; let loginBusy = false;
-const sectionLabels = { overview: 'Overview', donors: 'Donor registry', audit: 'Audit trail', guide: 'Workspace guide' };
+const sectionLabels = { overview: 'Overview', donors: 'Donor registry', audit: 'Audit trail', guide: 'Workspace guide', ...operationLabels };
 const allowed = permission => view.has(user, permission);
+const operations = new WorkspaceOperations({ user: () => user, dialog, toast, navigate, refresh: () => render(), expired: () => clearSession('Your session ended. Sign in again to continue.'), remember: trigger => { lastTrigger = trigger; } });
 function route() {
   const [path, query = ''] = (location.hash.slice(1) || '/overview').split('?');
   const parts = path.split('/').filter(Boolean);
@@ -33,15 +36,18 @@ function updateShell(section) {
   document.querySelectorAll('[data-feature]').forEach(link => { link.hidden = !allowed(link.dataset.feature); });
   document.querySelectorAll('[data-section]').forEach(link => { if (link.dataset.section === section) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current'); });
   hydrate();
+  operations.watchAlerts();
 }
 function busy(form) { return Boolean(form?.querySelector('[aria-busy="true"]')); }
-function isDirty() { const form = dialog.querySelector('#server-donor'); return Boolean(form && JSON.stringify(editor.formValues(form)) !== initialValues); }
+function isDirty() { const form = dialog.querySelector('#server-donor'); return Boolean(form && JSON.stringify(editor.formValues(form)) !== initialValues) || operations.isDirty(); }
 function resetEditor() { editingDonor = null; latestConflict = null; pendingKey = null; initialValues = ''; }
 function clearSession(message) {
   user = null; currentDonor = null; loadedAudit = []; generation += 1; loadController?.abort();
+  operations.clear();
   resetEditor(); lastTrigger = null; dialog.close(); dialog.innerHTML = ''; render(); if (message) toast(message);
 }
 async function render(focus = true) {
+  operations.clear();
   const requestId = ++generation; loadController?.abort(); loadController = new AbortController();
   const current = route(); currentDonor = null; loadedAudit = []; renderedHash = location.hash;
   updateShell(current.section);
@@ -53,7 +59,7 @@ async function render(focus = true) {
   main.setAttribute('aria-busy', 'true'); main.innerHTML = view.loading();
   try {
     let html;
-    if (current.parts.length > 2 || current.id && current.section !== 'donors') throw new ApiError('This page does not exist.', 404);
+    if (current.parts.length > 2 || current.id && !['donors', 'donations', 'inventory', 'assignments', 'clinical'].includes(current.section) || ['donations', 'clinical'].includes(current.section) && !current.id) throw new ApiError('This page does not exist.', 404);
     if (current.section === 'login' || current.section === 'access') { navigate('overview'); return; }
     if (current.section === 'overview') {
       const [donors, activity] = await Promise.all([
@@ -66,13 +72,14 @@ async function render(focus = true) {
       if (!allowed('donors.read')) throw new ApiError('Your account cannot access donor records.', 403);
       if (current.id) {
         const result = await api.donor(current.id, loadController.signal); if (requestId !== generation) return;
-        currentDonor = result.data; html = view.profile(currentDonor);
+        currentDonor = result.data; html = view.profile(currentDonor) + operations.profileLinks(currentDonor);
       } else html = view.registry(user, await api.donors(current.params, loadController.signal), current.params);
     } else if (current.section === 'audit') {
       if (!allowed('audit.read')) throw new ApiError('Your account cannot access the audit trail.', 403);
       const result = await api.audit(current.params, loadController.signal); if (requestId !== generation) return;
       loadedAudit = result.data; html = view.auditView(result, current.params);
-    } else if (current.section === 'guide') html = view.guide(user);
+    } else if (current.section === 'guide') html = view.guide(user) + operations.links();
+    else if (operations.supports(current.section)) html = await operations.render(current.section, current.id, current.params, loadController.signal);
     else throw new ApiError('This page does not exist.', 404);
     if (requestId !== generation) return;
     main.innerHTML = html; document.title = `${currentDonor?.name ?? sectionLabels[current.section] ?? 'Workspace'} | Blood Repository`;
@@ -90,6 +97,7 @@ function openRecord(edit, trigger) {
   initialValues = JSON.stringify(editor.formValues(dialog.querySelector('form'))); dialog.showModal();
 }
 function closeRequested() {
+  if (dialog.querySelector('.operation-form') || operations.isDirty()) { operations.requestClose(); return; }
   const form = dialog.querySelector('#server-donor'); if (busy(dialog)) return;
   if (isDirty()) {
     const panel = form.querySelector('#discard-panel'); panel.hidden = false;
@@ -188,8 +196,10 @@ document.addEventListener('click', event => {
 });
 document.addEventListener('submit', event => {
   const form = event.target; if (!(form instanceof HTMLFormElement)) return; event.preventDefault(); if (!form.reportValidity()) return;
+  if (form.matches('.operation-form')) return;
   if (form.dataset.filterForm) {
     const query = new URLSearchParams([...new FormData(form)].filter(([, value]) => String(value).trim()));
+    if (form.dataset.filterForm === 'inventory' && query.get('expires_before')) query.set('expires_before', toInstant(query.get('expires_before')));
     navigate(`${form.dataset.filterForm}?${query}`); return;
   }
   const operation = form.id === 'server-login' ? submitLogin(form) : form.id === 'server-donor' ? submitDonor(form) : null;
@@ -197,6 +207,7 @@ document.addEventListener('submit', event => {
 });
 dialog.addEventListener('cancel', event => { if (busy(dialog) || isDirty()) { event.preventDefault(); closeRequested(); } });
 dialog.addEventListener('close', () => {
+  operations.closed();
   resetEditor(); dialog.innerHTML = ''; if (lastTrigger?.isConnected) lastTrigger.focus(); lastTrigger = null;
   if (user && location.hash !== renderedHash) render();
 });

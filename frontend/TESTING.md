@@ -10,7 +10,7 @@ Use this guide to test the currently implemented frontend and backend foundation
 | Public and staff demonstration | http://127.0.0.1:8000/ | Hero, locator examples and simulated operational screens using fictional in-memory records |
 | Minimal backend health response | http://127.0.0.1:8000/api/v1/health | Application/database health endpoint; not a complete monitoring system |
 
-The demo's role selector does not sign you into the connected workspace. Demo changes reset on reload. Connected saves persist in the local development database. Clinical workflows, inventory, reports, SMS and recovery screens in the demo are not evidence that those backend services exist.
+The demo's role selector does not sign you into the connected workspace. Demo changes reset on reload; connected saves persist. Assigned donation history, inventory, in-app alerts, restricted clinical records and local SQLite recovery are now connected. Follow [the improvements walkthrough](IMPROVEMENTS.md) for their setup and checks. Public availability, reports and external SMS in the demo remain illustrations.
 
 Use fictional test data. Local browser testing writes to your configured development database; automated backend tests use isolated SQLite databases. Do not use a production database for these steps. MySQL validation and production readiness remain separate work.
 
@@ -138,19 +138,19 @@ Create additional fictional accounts using the same `-Action user` command, each
 
 | Role | Expected donor access | Create / correct | Audit |
 | --- | --- | --- | --- |
-| Red Cross Administrator | All | Yes / all | Yes |
-| Red Cross Personnel | All | Yes / all | Denied |
-| Barangay Health Coordinator | Own created records | Yes / own only | Denied |
+| Red Cross Administrator | Assigned records | Yes / assigned | Yes |
+| Red Cross Personnel | Assigned records | Yes / assigned | Denied |
+| Barangay Health Coordinator | Assigned records | Yes / assigned | Denied |
 | Report Viewer | Denied | Denied | Denied |
 | System Administrator | Denied | Denied | Yes |
 
 - [ ] Verify each account's visible navigation and Workspace guide agree with this matrix.
 - [ ] For a denied feature, enter its URL directly: `/workspace#/donors` or `/workspace#/audit`. Expected: access denied, not a hidden-link-only restriction.
 - [ ] Create a donor as a coordinator. Expected: the coordinator can find and correct that record.
-- [ ] Copy another account's donor profile URL, then open it as the coordinator. Expected: not found (404) without disclosing that out-of-scope record.
+- [ ] Copy an unassigned donor profile URL, then open it as the coordinator. Expected: not found (404) without disclosing that out-of-scope record.
 - [ ] As Report Viewer, verify the overview/guide remain useful without invented donor totals or an operational reports page.
 
-These are current development permissions. Coordinator scope is creator ownership; geographic access rules await approval. Backend tests separately verify permissions on actual API requests, inactive accounts and unauthenticated access.
+Red Cross Administrators manage explicit assignments through a reference-only queue. Existing records begin assigned to their creator; new records receive the creator assignment under the provisioned create permission. Clinical actions require separate grants. System Administrator has audit and technical backups without operational donor access. See [the current matrix](../docs/backend/OPERATIONS.md).
 
 ## 6. Public and staff demo checklist
 
@@ -213,7 +213,7 @@ Run all frontend tests:
 npm.cmd test
 ```
 
-Expected current baseline: **33 passing tests**, zero failures and zero skipped tests. These cover the demo model/workflow, selected contrast pairs, connected DOM workflows, API-client behavior, workspace views and asset references. The connected DOM scenario simulates HTTP responses; it does not prove a live browser-to-database workflow. Use the manual connected checklist and backend HTTP suite for that boundary.
+Expected current baseline: **37 passing tests**, zero failures and zero skipped tests. These cover the demo model/workflow, selected contrast pairs, connected DOM workflows, API-client behavior, workspace views and asset references. The connected DOM scenario simulates HTTP responses; it does not prove a live browser-to-database workflow. Use the manual connected checklist and backend HTTP suite for that boundary.
 
 Syntax-only checks:
 
@@ -231,7 +231,7 @@ The new cross-platform entry also supports `npm.cmd run test:backend`, or `npm.c
 powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\backend.ps1" -Action test
 ```
 
-Expected recorded foundation baseline: **22 passing tests with 141 assertions**; test counts may change as features are added. Check the actual run's result rather than assuming this baseline proves a fresh pass.
+Expected recorded foundation baseline: **41 passing tests**; test counts may change as features are added. Check the actual run's result rather than assuming this baseline proves a fresh pass.
 
 The suite covers real authentication and authorization, validation, persistence, idempotency, stale corrections, transactional audit behavior, safe errors, asset delivery and an actual HTTP session/CSRF flow. It uses isolated SQLite data, not the manually populated development records. It does not establish MySQL compatibility.
 
@@ -277,6 +277,6 @@ Blocked or not-run checks:
 Follow-up needed:
 ```
 
-Passing these checks validates the current local milestone. It does not complete deferred clinical modules, security/load assessments, MySQL verification, backup restoration or a production release review.
+Also complete the new [connected improvements walkthrough](IMPROVEMENTS.md): assignments, donation counts, stock transitions/expiry, recipient alerts, clinical recording/review, and actual isolated recovery. Passing these checks validates the current local milestone. It does not complete deferred clinical modules, security/load assessments, MySQL verification, backup restoration or a production release review.
 
 Related references: [Phase 2 scope](PHASE-2.md), [verification notes](QA.md), [frontend routes](README.md), [backend setup](../backend/README.md), [permission matrix and acceptance criteria](../docs/backend/FOUNDATION.md).

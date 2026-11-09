@@ -1,0 +1,2246 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Blood Repository Operations API",
+    "version": "1.1.0",
+    "description": "Protected connected operations. Detailed access, fields, transitions and recovery limits are in OPERATIONS.md. No MySQL verification or medical interpretation is implied."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8000"
+    }
+  ],
+  "security": [
+    {
+      "sessionCookie": []
+    }
+  ],
+  "paths": {
+    "/api/v1/assignments": {
+      "get": {
+        "summary": "Reference-only assignment queue and permitted staff directory",
+        "description": "Red Cross Administrator only. Does not return unassigned donor names. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Paginated allowed records and module metadata. Catalogs/assignment detail may omit pagination.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/List"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "donor_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/assignments/{donor}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "donor",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Inspect active and revoked staff assignments",
+        "description": "Red Cross Administrator only. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Paginated allowed records and module metadata. Catalogs/assignment detail may omit pagination.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/List"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        }
+      },
+      "put": {
+        "summary": "Grant, edit or revoke versioned donor and category access",
+        "description": "New version 0; existing current version. Revocation preserves version history. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Confirmed module resource or operation result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignmentInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/donors/{donor}/donations": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "donor",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Scoped donation history and completed count",
+        "description": " Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Paginated allowed records and module metadata. Catalogs/assignment detail may omit pagination.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/List"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "completed",
+                "voided"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      },
+      "post": {
+        "summary": "Record completed documentary event with atomic audit",
+        "description": " Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Confirmed module resource or operation result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created module resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DonationInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/donors/{donor}/donations/{donation}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "donor",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "in": "path",
+          "name": "donation",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "patch": {
+        "summary": "Correct or void donation; no reactivation of voided events",
+        "description": " Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Confirmed module resource or operation result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DonationCorrection"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inventory": {
+      "get": {
+        "summary": "Filter stock and order by entered expiry",
+        "description": "Available excludes unverified and expired units. Response includes available_total and existing component/location labels. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Paginated allowed records and module metadata. Catalogs/assignment detail may omit pagination.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/List"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string",
+              "maxLength": 80
+            }
+          },
+          {
+            "in": "query",
+            "name": "blood_type",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "O+",
+                "O-",
+                "A+",
+                "A-",
+                "B+",
+                "B-",
+                "AB+",
+                "AB-"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "component",
+            "schema": {
+              "type": "string",
+              "maxLength": 80
+            }
+          },
+          {
+            "in": "query",
+            "name": "location",
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "available",
+                "quarantined",
+                "spoiled",
+                "released",
+                "discarded",
+                "expired"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "expires_before",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Explicit UTC/offset instant; UI entry uses Philippine time."
+            }
+          },
+          {
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      },
+      "post": {
+        "summary": "Register pending unit with explicit collection/expiry instants",
+        "description": " Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Confirmed module resource or operation result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created module resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnitInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inventory/{unit}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "unit",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Unit detail and stock-event history",
+        "description": " Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Confirmed module resource or operation result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        }
+      }
+    },
+    "/api/v1/inventory/{unit}/transitions": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "unit",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "summary": "Versioned verify, quarantine, spoil, release or discard",
+        "description": "No repeated terminal actions. Expired units cannot be verified/released. Staff verification does not infer medical suitability. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Confirmed module resource or operation result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnitTransition"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stock-rules": {
+      "get": {
+        "summary": "Administrator-configured thresholds and recipients",
+        "description": " Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Paginated allowed records and module metadata. Catalogs/assignment detail may omit pagination.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/List"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      },
+      "post": {
+        "summary": "Create or update immutable-scope stock rule",
+        "description": "No thresholds seeded. Administrator permission required. Existing scope cannot be renamed. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Confirmed module resource or operation result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockRuleInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stock-alerts": {
+      "get": {
+        "summary": "Recipient-scoped open/resolved alerts and unread-open total",
+        "description": "Includes unacknowledged_open_count and configured_scopes. Current recipients and inventory permission are checked. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Paginated allowed records and module metadata. Catalogs/assignment detail may omit pagination.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/List"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/stock-alerts/reconcile": {
+      "post": {
+        "summary": "Administrator-triggered stock/expiry reconciliation",
+        "description": "Also scheduled every minute when the scheduler runs. Deduplicates unresolved conditions. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Confirmed module resource or operation result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        }
+      }
+    },
+    "/api/v1/stock-alerts/{alert}/acknowledge": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "alert",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      ],
+      "post": {
+        "summary": "Current recipient records awareness",
+        "description": "Acknowledgement does not resolve a shortage. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Confirmed module resource or operation result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        }
+      }
+    },
+    "/api/v1/clinical-catalog": {
+      "get": {
+        "summary": "Administrator clinical field definitions",
+        "description": "Unpaginated definitions, no patient data or seeded panels. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Paginated allowed records and module metadata. Catalogs/assignment detail may omit pagination.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/List"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        }
+      },
+      "post": {
+        "summary": "Versioned laboratory field definition",
+        "description": "Keys/formats immutable; existing recorded definitions are preserved with results. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Confirmed module resource or operation result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClinicalFieldInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/donors/{donor}/clinical/{category}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "donor",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "in": "path",
+          "name": "category",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "screening",
+              "laboratory",
+              "eligibility"
+            ]
+          }
+        }
+      ],
+      "get": {
+        "summary": "Category-granted encrypted clinical entries",
+        "description": "Requires active donor assignment plus category.read. Includes active laboratory catalog when applicable. Read access is audited. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Paginated allowed records and module metadata. Catalogs/assignment detail may omit pagination.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/List"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      },
+      "post": {
+        "summary": "Record encrypted clinical entry and initial revision",
+        "description": "Requires category.write. No interpretation, medical intervals or eligibility automation. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Confirmed module resource or operation result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created module resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClinicalInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/donors/{donor}/clinical/{category}/{entry}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "donor",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "in": "path",
+          "name": "category",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "screening",
+              "laboratory",
+              "eligibility"
+            ]
+          }
+        },
+        {
+          "in": "path",
+          "name": "entry",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "patch": {
+        "summary": "Versioned clinical correction; returns entry to recorded",
+        "description": "Reason and historical snapshots stay encrypted; values are omitted from general audit. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Confirmed module resource or operation result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClinicalCorrection"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/donors/{donor}/clinical/{category}/{entry}/review": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "donor",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "in": "path",
+          "name": "category",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "screening",
+              "laboratory",
+              "eligibility"
+            ]
+          }
+        },
+        {
+          "in": "path",
+          "name": "entry",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "summary": "Independent authorized review",
+        "description": "Requires category.read and category.review; self-review is disabled by default. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Confirmed module resource or operation result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClinicalReview"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/donors/{donor}/clinical/{category}/{entry}/history": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "donor",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        {
+          "in": "path",
+          "name": "category",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "screening",
+              "laboratory",
+              "eligibility"
+            ]
+          }
+        },
+        {
+          "in": "path",
+          "name": "entry",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Paginated encrypted revision history",
+        "description": "Requires category.read; access is audited. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Paginated allowed records and module metadata. Catalogs/assignment detail may omit pagination.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/List"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/backups": {
+      "get": {
+        "summary": "Private technical backup metadata and adapter status",
+        "description": "System Administrator only. Includes supported, adapter, schedule_pht and snapshot limit. No artifact content or private path returned. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Paginated allowed records and module metadata. Catalogs/assignment detail may omit pagination.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/List"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ]
+      },
+      "post": {
+        "summary": "Idempotent encrypted SQLite snapshot",
+        "description": "System Administrator. SQLite only. Key identifies the backup run. Check run status after an interrupted response. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Confirmed module resource or operation result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BackupInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backups/{backup}/restore-copy": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "backup",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "summary": "Restore and verify a new isolated private copy",
+        "description": "Never replaces a running database. Response identifies the new copy and integrity/count verification; original key required. Session, active-account and per-action permission checks apply. Every browser write requires X-XSRF-TOKEN. Standard staff API throttling applies.",
+        "responses": {
+          "200": {
+            "description": "Confirmed module resource or operation result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Data"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreConfirmation"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "blood_repository_session",
+        "description": "Browser writes additionally require decoded XSRF-TOKEN as X-XSRF-TOKEN."
+      }
+    },
+    "schemas": {
+      "AssignmentInput": {
+        "type": "object",
+        "required": [
+          "user_id",
+          "version",
+          "clinical_permissions",
+          "reason"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "clinical_permissions": {
+            "type": "array",
+            "uniqueItems": true,
+            "maxItems": 9,
+            "items": {
+              "type": "string",
+              "enum": [
+                "screening.read",
+                "screening.write",
+                "screening.review",
+                "laboratory.read",
+                "laboratory.write",
+                "laboratory.review",
+                "eligibility.read",
+                "eligibility.write",
+                "eligibility.review"
+              ]
+            }
+          },
+          "revoke": {
+            "type": "boolean",
+            "default": false
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          }
+        }
+      },
+      "DonationInput": {
+        "type": "object",
+        "required": [
+          "reference",
+          "donated_on",
+          "location"
+        ],
+        "properties": {
+          "reference": {
+            "type": "string",
+            "maxLength": 80,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "donated_on": {
+            "type": "string",
+            "format": "date"
+          },
+          "location": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          }
+        }
+      },
+      "DonationCorrection": {
+        "type": "object",
+        "required": [
+          "donated_on",
+          "location",
+          "status",
+          "version",
+          "reason"
+        ],
+        "properties": {
+          "donated_on": {
+            "type": "string",
+            "format": "date"
+          },
+          "location": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "voided"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          }
+        }
+      },
+      "UnitInput": {
+        "type": "object",
+        "required": [
+          "reference",
+          "blood_type",
+          "component",
+          "location",
+          "collected_at",
+          "expires_at",
+          "reason"
+        ],
+        "properties": {
+          "reference": {
+            "type": "string",
+            "maxLength": 80,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "blood_type": {
+            "type": "string",
+            "enum": [
+              "O+",
+              "O-",
+              "A+",
+              "A-",
+              "B+",
+              "B-",
+              "AB+",
+              "AB-"
+            ]
+          },
+          "component": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80
+          },
+          "location": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "collected_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Explicit UTC/offset instant; UI entry uses Philippine time."
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Explicit UTC/offset instant; UI entry uses Philippine time."
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          }
+        }
+      },
+      "UnitTransition": {
+        "type": "object",
+        "required": [
+          "action",
+          "version",
+          "reason"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "verify",
+              "quarantine",
+              "spoil",
+              "release",
+              "discard"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "verification_confirmed": {
+            "type": "boolean",
+            "description": "Required and true for verify."
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          }
+        }
+      },
+      "StockRuleInput": {
+        "type": "object",
+        "required": [
+          "version",
+          "blood_type",
+          "component",
+          "location",
+          "threshold",
+          "recipient_ids",
+          "active",
+          "reason"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "blood_type": {
+            "type": "string",
+            "enum": [
+              "O+",
+              "O-",
+              "A+",
+              "A-",
+              "B+",
+              "B-",
+              "AB+",
+              "AB-"
+            ]
+          },
+          "component": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80
+          },
+          "location": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "threshold": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 999999
+          },
+          "recipient_ids": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          }
+        }
+      },
+      "ClinicalFieldInput": {
+        "type": "object",
+        "required": [
+          "version",
+          "key",
+          "label",
+          "format",
+          "required",
+          "active",
+          "reason"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "key": {
+            "type": "string",
+            "maxLength": 60,
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "text",
+              "number",
+              "choice"
+            ]
+          },
+          "choices": {
+            "type": "array",
+            "maxItems": 30,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "description": "Required nonempty list for choice format."
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 40,
+            "nullable": true
+          },
+          "reference_text": {
+            "type": "string",
+            "maxLength": 500,
+            "nullable": true
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          }
+        }
+      },
+      "ClinicalInput": {
+        "type": "object",
+        "required": [
+          "source_reference",
+          "observed_at",
+          "payload"
+        ],
+        "properties": {
+          "source_reference": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Explicit UTC/offset instant; UI entry uses Philippine time."
+          },
+          "payload": {
+            "type": "object",
+            "description": "Laboratory: results keyed by active catalog, optional notes; definitions captured by server. Screening: decision pending/recorded/requires_review and required notes. Eligibility: decision not_assessed/eligible/deferred/not_eligible, required notes and optional staff-entered deferred_until YYYY-MM-DD. No diagnosis is inferred."
+          }
+        }
+      },
+      "ClinicalCorrection": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ClinicalInput"
+          },
+          {
+            "type": "object",
+            "required": [
+              "version",
+              "reason"
+            ],
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 1000
+              }
+            }
+          }
+        ]
+      },
+      "ClinicalReview": {
+        "type": "object",
+        "required": [
+          "version",
+          "reason"
+        ],
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 1000
+          }
+        }
+      },
+      "BackupInput": {
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 500
+          }
+        }
+      },
+      "RestoreConfirmation": {
+        "type": "object",
+        "required": [
+          "isolated_copy_confirmed"
+        ],
+        "properties": {
+          "isolated_copy_confirmed": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        }
+      },
+      "Data": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "description": "Allowlisted module resource; identifiers and versions are server owned. See OPERATIONS.md for resource fields and privacy."
+      },
+      "List": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "meta": {
+            "type": "object",
+            "required": [
+              "total",
+              "current_page",
+              "last_page"
+            ],
+            "properties": {
+              "total": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "current_page": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "last_page": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "message",
+          "code",
+          "request_id"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "Error401": {
+        "description": "Sign in or account inactive",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error403": {
+        "description": "Missing role/category action permission",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error404": {
+        "description": "Missing or outside assigned record/recipient scope",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error409": {
+        "description": "Stale version, duplicate reference, incompatible state or retry key conflict",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error419": {
+        "description": "Missing/expired CSRF state",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error422": {
+        "description": "Input or configuration validation error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error429": {
+        "description": "Rate limited; honor Retry-After",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Error500": {
+        "description": "Safe service failure with request reference",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+}

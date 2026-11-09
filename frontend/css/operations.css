@@ -1,0 +1,32 @@
+.connected-workspace .sidebar { overflow-y: auto; }
+.connected-workspace .ops-actions, .connected-workspace .ops-links, .connected-workspace .ops-tabs { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.connected-workspace .ops-links { margin-block: 16px; }
+.connected-workspace .ops-tabs { margin-block: 20px; }
+.connected-workspace .ops-tabs [aria-current="page"] { border-color: var(--navy); box-shadow: inset 0 -3px var(--navy); }
+.connected-workspace .ops-preserve { white-space: pre-wrap; overflow-wrap: anywhere; }
+.connected-workspace .ops-fields > .notice { grid-column: 1 / -1; }
+.connected-workspace .ops-fields fieldset { padding: 16px; border: 1px solid var(--workspace-control-border, #7c8a94); border-radius: 8px; display: grid; gap: 12px; }
+.connected-workspace .ops-fields legend { padding-inline: 6px; font-weight: 600; }
+.connected-workspace .ops-fields fieldset p { font-size: 13px; }
+.connected-workspace .ops-review, .connected-workspace .ops-history { padding: 18px; border: 1px solid var(--border); border-radius: 10px; margin-block: 16px; }
+.connected-workspace .ops-discard { padding: 16px; background: var(--paper); border: 1px solid var(--border); border-radius: 8px; margin-block: 16px; }
+.connected-workspace .ops-cards { display: grid; gap: 12px; padding: 0; list-style: none; }
+.connected-workspace .ops-cards > li { padding: 16px; border: 1px solid var(--border); border-radius: 10px; }
+.connected-workspace .ops-cards dl { display: grid; gap: 12px; }
+.connected-workspace .ops-cards dt { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+.connected-workspace .ops-cards dd { margin: 0; overflow-wrap: anywhere; }
+.connected-workspace .ops-desktop { display: none; }
+.connected-workspace .operation-form .form-error { margin-block: 14px; overflow-wrap: anywhere; }
+.connected-workspace .operation-form textarea { min-height: 96px; }
+.connected-workspace .ops-review dd { max-width: 100%; }
+.connected-workspace .stock-alert-notice { padding: 14px 24px; background: #fff4d7; color: #594214; border-bottom: 1px solid #b68b35; }
+.connected-workspace .stock-alert-notice a { color: inherit; text-decoration: underline; font-weight: 600; }
+@media (min-width: 768px) {
+  .connected-workspace .ops-desktop { display: block; }
+  .connected-workspace .ops-cards { display: none; }
+}
+@media (max-width: 767px) {
+  .connected-workspace .ops-links { display: grid; grid-template-columns: 1fr; }
+  .connected-workspace .ops-actions > .button { flex: 1 1 150px; }
+  .connected-workspace .operation-form .dialog-actions { flex-wrap: wrap; }
+}

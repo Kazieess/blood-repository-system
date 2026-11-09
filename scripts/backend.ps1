@@ -1,4 +1,4 @@
-param([ValidateSet('setup', 'serve', 'test', 'user')][string]$Action = 'serve')
+param([ValidateSet('setup', 'serve', 'test', 'user', 'schedule')][string]$Action = 'serve')
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $runtimePath = Join-Path $projectRoot '.tools/php84/php.exe'
@@ -23,6 +23,7 @@ try {
             if ($LASTEXITCODE) { throw 'Database setup failed.' }
         }
         'serve' { & $runtimePath artisan serve --host=127.0.0.1 --port=8000 }
+        'schedule' { & $runtimePath artisan schedule:work --no-interaction }
         'test' { & $runtimePath artisan test; if ($LASTEXITCODE) { throw 'Backend tests failed.' } }
         'user' { & $runtimePath artisan app:create-user; if ($LASTEXITCODE) { throw 'Account creation failed.' } }
     }

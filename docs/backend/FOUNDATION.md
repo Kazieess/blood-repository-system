@@ -1,5 +1,7 @@
 # Backend foundation decisions
 
+Historical 6 November foundation baseline. The 9 November [connected implementation](OPERATIONS.md) supersedes the access matrix and deferred-feature status below; explicit assignments, donation history, inventory, alerts, clinical records and local SQLite recovery are now implemented.
+
 Status: local development baseline for review, 6 November 2026. These decisions implement the first milestone and do not approve production data collection or medical workflows.
 
 ## Runtime and architecture

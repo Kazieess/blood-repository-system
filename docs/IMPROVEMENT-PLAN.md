@@ -2,7 +2,17 @@
 
 Review date: 9 November 2026.
 
-Status: feasibility and proposed delivery sequence, updated with the user's scope clarifications on 9 November 2026. This document records the suggestions supplied as screenshots and maps them to the current code. It does not implement the features or approve unresolved clinical, assignment, stock or recovery policies.
+Status: connected local-development implementation delivered on 9 November 2026, following the user's scope/access clarifications. [Implementation decisions/contracts](backend/OPERATIONS.md) and [the connected walkthrough](../frontend/IMPROVEMENTS.md) describe delivered behavior and configuration. The original gap table below describes the baseline before implementation. Clinical interpretation, production cutover, external SMS and MySQL verification are not implied.
+
+## Delivered status
+
+- Versioned Red Cross Administrator-managed assignments, creator backfill and separate clinical grants; server-enforced assigned donor/history access.
+- Persistent donation events, correction/voiding, scoped filters and derived completed counts.
+- Inventory, explicit verification/stock transitions, spoilage labeling, expiry-ordered available candidates and event history.
+- Configurable thresholds/recipients, deduplicated shortage episodes, acknowledgement/resolution, scheduled expiry evaluation and a visible periodic notice.
+- Empty configurable laboratory catalog, screening/laboratory/eligibility entry, independent review, encrypted payloads/revisions and access auditing.
+- Actual encrypted local SQLite snapshots and verified isolated restore copies. Daily backup schedule stays unconfigured until set; no running database is overwritten.
+- Connected responsive screens, API contracts and behavior tests. Visual/device review is outstanding because automation hosts were unavailable. Deployment-specific MySQL/offsite recovery and external notifications remain separate work.
 
 ## Confirmed scope clarifications
 
@@ -11,7 +21,7 @@ Status: feasibility and proposed delivery sequence, updated with the user's scop
 
 These decisions resolve the intended audience and clinical feature scope. Remaining design decisions include the staff role allowed to assign/reassign access, donor/team/event assignment granularity, supervisory exceptions, exact clinical fields and result formats, review/correction authority and retention. Do not invent test panels, reference ranges, diagnostic interpretations or eligibility intervals. File attachments are a separate decision, not implicitly required by detailed structured results.
 
-Existing creator-based coordinator access and broader operational role access remain the implemented behavior until an explicit assignment migration and policy change are delivered. The eventual transition needs a documented mapping of existing records, immediate enforcement of revoked assignments on subsequent protected requests, and tests preventing access through URLs, aggregates or exports outside the approved scope.
+The delivered migration maps existing records to their creator without clinical grants. Broader chapter-wide donor visibility is removed. Revocation/re-grant retain a monotonic version and apply on subsequent protected requests. The current access matrix is in OPERATIONS.md; no donor self-service or representative access was added.
 
 ## Suggestions and current coverage
 
@@ -89,4 +99,4 @@ The [local testing guide](../frontend/TESTING.md) remains the checklist for feat
 
 ## Existing boundaries
 
-The authenticated milestone currently covers sessions, donor profiles/search/corrections and restricted audit activity. Its permissions and assumptions are documented in [backend foundation decisions](backend/FOUNDATION.md). The [master project prompt](../IT-SIA%20-%20Synthesized-Project/Master%20Development%20Prompt%20-%20Blood%20Repository%20System.md) requires unresolved rules to be identified before broad development. No schema, account permissions, API or existing data was changed to prepare this plan.
+The [foundation decisions](backend/FOUNDATION.md) record the earlier milestone; [OPERATIONS.md](backend/OPERATIONS.md) supersedes its access matrix. The [master prompt](../IT-SIA%20-%20Synthesized-Project/Master%20Development%20Prompt%20-%20Blood%20Repository%20System.md) continues to require explicit decisions/configuration for unresolved rules. Additive migrations preserved existing donor/account records; the documented creator-assignment backfill was applied.

@@ -2,7 +2,7 @@
 
 Davao del Sur Blood Repository and Donor Monitoring System: an independent interface demo and a Laravel-connected staff workspace. This is a development baseline, not a production release.
 
-The connected workspace implements cookie-session authentication, server permissions, persistent donor profiles/search/corrections and restricted audit activity. Clinical records, explicit Red Cross assignments, donation history, inventory, alerts and recovery remain planned work; see [the improvement plan](docs/IMPROVEMENT-PLAN.md).
+The connected workspace implements session authentication, explicit Red Cross assignments, donation history/counts, controlled inventory, recipient-scoped alerts, encrypted clinical entries/revisions, restricted audit and actual local SQLite backup/isolated recovery. See [the improvements walkthrough](frontend/IMPROVEMENTS.md) and [implementation decisions](docs/backend/OPERATIONS.md). No clinical test panels, thresholds or automated medical decisions are seeded.
 
 ## Reproduce the development environment
 
@@ -76,7 +76,7 @@ The test entry uses Node's current executable, expands test filenames without sh
 
 Backend tests clear cached Laravel configuration and explicitly select isolated SQLite test settings. The HTTP test creates/removes its own temporary database/server. No running development server, local staff account or existing donor records are required. Follow the setup above first to provide an application key. The Windows HTTP test needs normal process-cleanup permissions; restricted sandboxes can prevent teardown.
 
-Current recorded baseline: **33 frontend tests and 22 backend tests / 141 assertions**. Counts are descriptive, not enforced as a substitute for passing results. Manual visual/device testing is separate; see [the full testing guide](frontend/TESTING.md).
+Current recorded baseline: **37 frontend tests and 41 backend tests**. Counts are descriptive, not enforced as a substitute for passing results. Manual visual/device testing is separate; see [the full testing guide](frontend/TESTING.md).
 
 ## Git workflow and private hosting
 

@@ -1,4 +1,6 @@
-﻿# Blood Repository backend foundation
+# Blood Repository backend
+
+Current connected modules and configuration are documented in [OPERATIONS.md](../docs/backend/OPERATIONS.md) and [the walkthrough](../frontend/IMPROVEMENTS.md). The foundation description below is retained for runtime/setup context.
 
 Laravel 13.40.0 with Sanctum 4.3.3. Verified locally using the workspace PHP 8.4.27 runtime. This milestone implements real cookie-session authentication, action-level permissions, scoped donor CRUD, retry-safe registration, optimistic correction checks and transactional audit records.
 
@@ -70,6 +72,6 @@ For PHP formatting without a Git repository, run Pint against the edited source 
 
 ## Remaining scope
 
-Clinical eligibility and deferrals, donation history, inventory operations, public production snapshots, reports/exports, account-management UI, password reset delivery, SMS, scheduled backups and real recovery jobs are not implemented by this backend milestone. The frontend demo illustrates those later features. Only fictional data should be used until stakeholder fields, privacy, scope and retention are approved.
+Explicit donor assignments, recorded donation history/counts, inventory/expiry/stock transitions, in-app shortage alerts, restricted encrypted screening/laboratory/eligibility records and actual local SQLite backup/isolated recovery are implemented. Configure clinical grants, approved laboratory fields, stock thresholds/recipients and the scheduler using OPERATIONS.md. Automated clinical interpretation, public production snapshots, reports/exports, account-management UI, password reset delivery, external SMS, MySQL verification, offsite backups and production restore/cutover remain separate work. Use fictional development data.
 
-Recorded local baseline: 22 backend tests (141 assertions) and 33 frontend checks passed. The real-HTTP test requires normal Windows process-cleanup permissions; inside a restricted sandbox, run it with the appropriate approval so taskkill can stop its temporary server. A fresh run's output is the evidence for that run.
+Recorded connected baseline: 41 backend tests and 37 frontend checks passed. The real-HTTP test requires normal Windows process-cleanup permissions; inside a restricted sandbox, run it with the appropriate approval so taskkill can stop its temporary server. A fresh run's output is the evidence for that run.

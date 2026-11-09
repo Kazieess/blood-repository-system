@@ -1,5 +1,7 @@
 # Frontend Phase 2: connected staff workspace
 
+Historical Phase 2 baseline. The 9 November [connected improvements](IMPROVEMENTS.md) add assignments, donation history, inventory, alerts, restricted clinical records and actual local SQLite recovery; the scope/verification below describes the preceding milestone.
+
 Implemented on 6 November 2026. Here, “frontend Phase 2” means the second interface milestone following the initial demo and backend foundation. It is separate from the proposal's calendar phase named “Design”.
 
 ## Delivered

@@ -1,4 +1,6 @@
-﻿# Blood Repository frontend
+# Blood Repository frontend
+
+For the latest authenticated operations, read [Connected improvements](IMPROVEMENTS.md). The Phase 1 screens below describe the independent fictional demo; operational connected modules use the Laravel workspace.
 
 A complete Phase 1 frontend demonstration for the proposed Davao del Sur Blood Repository and Donor Monitoring System. Includes a public hero landing page, view-only locator, and a separate staff workspace. All records are fictional. This is not a deployed or authenticated operational system.
 

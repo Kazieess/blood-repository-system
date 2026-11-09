@@ -1,11 +1,18 @@
 # Frontend verification
 
-Review date: 6 November 2026.
+Review date: 9 November 2026.
 
-## Completed checks
+## Connected improvement checks
+
+- 41 backend tests pass, including the real-HTTP session/CSRF flow, assigned access, donation counts, controlled stock/expiry, recipient alerts, restricted encrypted clinical history and actual SQLite recovery/tamper checks.
+- 37 frontend tests pass. The new connected operations scenario covers review-before-write, uncertain retries, unsaved entries, Philippine time conversion, stock verification, assignment grants, catalog/results, independent review, alert acknowledgement, isolated restore confirmation and clearing on sign-out.
+- New screens and modules use the existing same-origin authenticated workspace and contain no demo-store imports.
+- Native/browser automation hosts were unavailable; pixel/device/screen-reader review remains outstanding. MySQL and production recovery are not verified.
+
+## Foundation and Phase 2 checks
 
 - All JavaScript modules pass `node --check`.
-- 33 automated checks pass using `node --test frontend/tests/*.test.mjs`.
+- 37 automated checks pass using `node --test frontend/tests/*.test.mjs`.
 - Nine behavior tests cover role restrictions, input validation, donor corrections, explicit assessments, donation-history reconciliation, duplicate prevention, inventory verification and terminal transitions, public snapshot separation, report date filters, CSV safety and escaped markup.
 - Eight contrast tests verify selected text pairs at 4.5:1 or better.
 - One demo DOM integration test exercises the actual event handlers and rendered pages from public home through donor workflows, inventory, reports, notification simulation, user administration, recovery, settings, role denial, error retry and exit.
@@ -24,7 +31,7 @@ Suggested review: public hero and navigation; locator normal/stale/unavailable; 
 
 ## Intentional limits
 
-The static `index.html` remains a fictional demo whose records reset on reload. The separate Laravel `/workspace` entry uses real cookie authentication, server authorization, persisted donor profiles and restricted audit access. Its frontend scope is documented in `PHASE-2.md`. Clinical assessments, inventory, SMS, scheduled jobs, restoration and official public stock remain future backend milestones. Passing DOM tests does not establish production readiness.
+The static `index.html` remains a fictional demo whose records reset on reload. The separate Laravel `/workspace` entry uses real cookie authentication, server authorization, persisted donor profiles and restricted audit access. Its frontend scope is documented in `PHASE-2.md`. Recorded clinical information, inventory, shortage jobs and local SQLite isolated recovery are now connected as described in IMPROVEMENTS.md. External SMS, official public stock and production recovery remain separate work. Passing DOM tests does not establish production readiness.
 
 ## Backend foundation verification
 
