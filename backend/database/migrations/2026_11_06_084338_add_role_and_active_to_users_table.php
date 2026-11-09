@@ -18,6 +18,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropConstrainedForeignId('role_id');
+            $table->dropIndex(['active']);
             $table->dropColumn('active');
         });
     }

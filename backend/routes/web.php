@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\AssignmentController;
 use App\Http\Controllers\Api\AuditController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BackupController;
+use App\Http\Controllers\Api\ClinicalController;
 use App\Http\Controllers\Api\DonationController;
 use App\Http\Controllers\Api\DonorController;
 use App\Http\Controllers\Api\InventoryController;
@@ -54,5 +56,15 @@ Route::prefix('api/v1')->name('api.v1.')->group(function (): void {
         Route::get('/stock-alerts', [StockAlertController::class, 'index']);
         Route::post('/stock-alerts/reconcile', [StockAlertController::class, 'reconcile']);
         Route::post('/stock-alerts/{alert}/acknowledge', [StockAlertController::class, 'acknowledge'])->whereNumber('alert');
+        Route::get('/clinical-catalog', [ClinicalController::class, 'catalog']);
+        Route::post('/clinical-catalog', [ClinicalController::class, 'saveCatalog']);
+        Route::get('/donors/{donor}/clinical/{category}', [ClinicalController::class, 'index'])->whereUuid('donor');
+        Route::post('/donors/{donor}/clinical/{category}', [ClinicalController::class, 'store'])->whereUuid('donor');
+        Route::patch('/donors/{donor}/clinical/{category}/{entry}', [ClinicalController::class, 'update'])->whereUuid('donor')->whereUuid('entry');
+        Route::post('/donors/{donor}/clinical/{category}/{entry}/review', [ClinicalController::class, 'review'])->whereUuid('donor')->whereUuid('entry');
+        Route::get('/donors/{donor}/clinical/{category}/{entry}/history', [ClinicalController::class, 'history'])->whereUuid('donor')->whereUuid('entry');
+        Route::get('/backups', [BackupController::class, 'index']);
+        Route::post('/backups', [BackupController::class, 'store']);
+        Route::post('/backups/{backup}/restore-copy', [BackupController::class, 'restore'])->whereUuid('backup');
     });
 });
