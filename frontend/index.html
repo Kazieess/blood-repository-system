@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#132938">
+  <meta name="description" content="Local interface prototype for the Davao del Sur Blood Repository and Donor Monitoring System.">
+  <title>Blood Repository | Davao del Sur</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/experience.css">
+  <script type="module" src="src/app.js"></script>
+</head>
+<body class="public-view">
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="public-header"><a href="#/home" class="public-brand" aria-label="Blood Repository home"><img src="assets/images/Logo%20-%20Primary.png" width="595" height="145" alt="Blood Repository, Davao del Sur"></a><nav aria-label="Public navigation"><a href="#/home" data-nav="home">Home</a><a href="#/availability" data-nav="availability">Availability</a><a href="#/help" data-nav="help">Help</a><a href="connected.html">Staff sign-in</a><a class="button secondary" href="#/login" data-nav="login">Demo</a></nav></header>
+  <aside class="sidebar" aria-label="Application sidebar">
+    <a class="brand" href="#/overview" aria-label="Blood Repository overview"><img src="assets/images/Logo%20-%20Primary.png" width="595" height="145" alt="Blood Repository, Davao del Sur donor monitoring system"></a>
+    <div class="chapter"><span class="chapter-mark">DS</span><span><span id="chapter-label">Davao del Sur Chapter</span><small>Staff workspace</small></span></div>
+    <p class="nav-label">WORKSPACE</p>
+    <nav aria-label="Main navigation"><a href="#/overview" data-nav="overview" data-permission="overview"><span data-icon="grid"></span>Overview</a><a href="#/donors" data-nav="donors" data-permission="donors"><span data-icon="users"></span>Donor registry</a><a href="#/inventory" data-nav="inventory" data-permission="inventory"><span data-icon="drop"></span>Blood inventory</a><a href="#/reports" data-nav="reports" data-permission="reports"><span data-icon="chart"></span>Reports & analytics</a><a href="#/notifications" data-nav="notifications" data-permission="notifications"><span data-icon="bell"></span>Notifications</a><a href="#/users" data-nav="users" data-permission="users"><span data-icon="users"></span>Users & roles</a><a href="#/audit" data-nav="audit" data-permission="audit"><span data-icon="book"></span>Audit trail</a><a href="#/backups" data-nav="backups" data-permission="backups"><span data-icon="storage"></span>Backup & recovery</a><a href="#/settings" data-nav="settings" data-permission="settings"><span data-icon="settings"></span>Settings</a></nav>
+    <div class="sidebar-bottom"><div class="support-note"><span data-icon="shield"></span><strong>Care starts with good records.</strong><p>One place for your chapter's donor and blood information.</p></div><button class="guide-button" data-action="guide"><span data-icon="book"></span>Interface guide<span aria-hidden="true">↗</span></button></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar"><span class="workspace-name">Blood Repository <span class="divider">/</span> <span id="breadcrumb">Overview</span></span><label class="state-preview"><span class="sr-only">Preview interface state</span><select id="workspace-preview"><option value="ready">Ready</option><option value="loading">Preview loading</option><option value="error">Preview error</option><option value="denied">Preview denied</option></select></label><a class="user" href="#/login" aria-label="Switch demo role"><span class="avatar small">RC</span><span id="session-role">Staff demo</span></a><button class="text-button" data-action="logout">Exit demo</button></header>
+    <main id="main" tabindex="-1"><p class="loading" role="status">Preparing the workspace…</p></main>
+    <footer class="footer"><span>Davao del Sur · Blood Repository <small>Project prototype · Not an official live service</small></span><nav aria-label="Footer navigation"><a href="#/home">Public home</a><a href="#/help">Help</a><a href="#/privacy">Privacy</a></nav></footer>
+  </div>
+  <nav class="mobile-nav" aria-label="Mobile navigation"><a href="#/overview" data-nav="overview" data-permission="overview"><span data-icon="grid"></span>Overview</a><a href="#/donors" data-nav="donors" data-permission="donors"><span data-icon="users"></span>Donors</a><a href="#/inventory" data-nav="inventory" data-permission="inventory"><span data-icon="drop"></span>Inventory</a><button id="mobile-menu-toggle" data-action="menu" aria-expanded="false" aria-controls="more-navigation"><span data-icon="menu"></span>More</button></nav>
+  <nav class="more-navigation" id="more-navigation" aria-label="More workspace navigation"><a href="#/reports" data-permission="reports">Reports & analytics</a><a href="#/notifications" data-permission="notifications">Notifications</a><a href="#/users" data-permission="users">Users & roles</a><a href="#/audit" data-permission="audit">Audit trail</a><a href="#/backups" data-permission="backups">Backup & recovery</a><a href="#/settings" data-permission="settings">Settings</a><a href="#/login">Switch demo role</a><a href="#/home">Public home</a><button data-action="guide">Interface guide</button><button data-action="logout">Exit demo</button></nav>
+  <dialog id="workflow-dialog" aria-labelledby="workflow-title"></dialog>
+  <dialog id="guide-dialog" aria-labelledby="guide-title"><div class="dialog-heading"><div><p class="eyebrow">THE DESIGN FOUNDATION</p><h2 id="guide-title">A clearer way to care.</h2></div><button class="icon-button" data-close="guide-dialog" aria-label="Close interface guide">×</button></div><p>Familiar language, readable records, and a quiet interface that keeps the work in focus.</p><div class="swatches"><div class="swatch navy">Repository navy<small>#132938</small></div><div class="swatch red">Availability red<small>#B5262D</small></div><div class="swatch paper">Warm paper<small>#F7F3EE</small></div><div class="swatch mist">Record mist<small>#D8E0E2</small></div></div><h3>Built around everyday work</h3><ul class="guide-list"><li>Overview: see sample stock and items needing attention.</li><li>Donor registry: search, filter, and open a donor record.</li><li>Donor profile: review details, recorded status, and donation history.</li></ul><p class="notice">This prototype has no authentication, clinical decision-making, SMS delivery, or server storage. Fields and operational permissions remain subject to stakeholder approval.</p><button class="button primary" data-close="guide-dialog">Back to workspace</button></dialog>
+  <div id="announcement" class="sr-only" role="status" aria-live="polite"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <noscript><p class="notice">Enable JavaScript to explore this local interface prototype.</p></noscript>
+</body>
+</html>

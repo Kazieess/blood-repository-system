@@ -1,0 +1,20 @@
+{
+  "name": "blood-repository-system",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Development and test tooling for the Blood Repository System",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "npm@11.19.1",
+  "scripts": {
+    "check": "node scripts/test.mjs syntax",
+    "test": "node scripts/test.mjs frontend",
+    "test:backend": "node scripts/test.mjs backend",
+    "test:all": "node scripts/test.mjs all"
+  },
+  "devDependencies": {
+    "happy-dom": "21.0.4"
+  }
+}

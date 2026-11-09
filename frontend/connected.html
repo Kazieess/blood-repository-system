@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#132938"><title>Staff sign-in | Blood Repository</title>
+  <link rel="stylesheet" href="css/styles.css"><link rel="stylesheet" href="css/experience.css">
+  <link rel="stylesheet" href="css/workspace.css">
+  <script type="module" src="src/connected.js"></script>
+</head>
+<body class="public-view connected-workspace">
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="public-header"><a class="public-brand" href="/"><img src="assets/images/Logo%20-%20Primary.png" width="595" height="145" alt="Blood Repository, Davao del Sur"></a><span class="prototype-tag">Staff workspace · Development</span></header>
+  <aside class="sidebar" aria-label="Staff sidebar"><a class="brand" href="#/overview"><img src="assets/images/Logo%20-%20Primary.png" width="595" height="145" alt="Blood Repository"></a><div class="chapter"><span class="chapter-mark">DS</span><span>Davao del Sur Chapter<small>Connected staff workspace</small></span></div><p class="nav-label">DAILY WORK</p><nav aria-label="Staff navigation"><a href="#/overview" data-section="overview"><span data-icon="grid"></span>Overview</a><a href="#/donors" data-section="donors" data-feature="donors.read"><span data-icon="users"></span>Donor registry</a><a href="#/audit" data-section="audit" data-feature="audit.read"><span data-icon="book"></span>Audit trail</a><a href="#/guide" data-section="guide"><span data-icon="shield"></span>Workspace guide</a></nav><div class="sidebar-bottom"><div class="workspace-care"><span data-icon="shield"></span><strong>Good records. Connected care.</strong><p>Every correction has a reason. Every record deserves care.</p></div><a class="guide-button" href="/">Open public prototype <span aria-hidden="true">↗</span></a></div></aside>
+  <div class="workspace"><header class="topbar"><span class="workspace-name">Staff workspace <span class="divider">/</span> <span id="workspace-title">Overview</span></span><button id="account-button" class="workspace-account" data-command="account" aria-label="Open account details"><span class="avatar small" id="account-initials">RC</span><span id="account-label">Account</span></button><button class="text-button" data-command="logout">Sign out</button></header><div id="connection-notice" class="workspace-offline" role="status" hidden></div><main id="main" tabindex="-1"><p class="loading" role="status">Checking your session…</p></main><footer class="footer"><span>Davao del Sur · Blood Repository<small>Connected workspace · Frontend Phase 2</small></span><a href="#/guide">Workspace guide</a></footer></div>
+  <nav class="mobile-nav" aria-label="Staff mobile navigation"><a href="#/overview" data-section="overview"><span data-icon="grid"></span>Overview</a><a href="#/donors" data-section="donors" data-feature="donors.read"><span data-icon="users"></span>Donors</a><a href="#/audit" data-section="audit" data-feature="audit.read"><span data-icon="book"></span>Audit</a><a href="#/guide" data-section="guide"><span data-icon="shield"></span>Guide</a></nav>
+  <dialog id="record-dialog" aria-labelledby="record-title"></dialog><div id="toast" class="toast" role="status" aria-live="polite" hidden><span id="toast-message"></span><button class="toast-dismiss" data-command="dismiss-toast" aria-label="Dismiss notification">×</button></div>
+  <noscript><p class="notice">Enable JavaScript to use the staff workspace.</p></noscript>
+</body></html>

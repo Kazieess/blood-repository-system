@@ -1,0 +1,174 @@
+openapi: 3.0.3
+info:
+  title: Blood Repository Foundation API
+  version: 1.0.0
+  description: Authentication, scoped donor records and restricted audit. Development data only until requirements approval.
+servers:
+  - url: http://127.0.0.1:8000
+security:
+  - sessionCookie: []
+paths:
+  /sanctum/csrf-cookie:
+    get:
+      security: []
+      summary: Initialize session and XSRF-TOKEN cookie
+      responses:
+        '204': {description: CSRF cookie initialized}
+  /api/v1/health:
+    get:
+      security: []
+      summary: Minimal health result without infrastructure details
+      responses:
+        '200': {description: Application and database reachable}
+        '503': {description: Service unavailable}
+  /api/v1/auth/login:
+    post:
+      security: []
+      summary: Authenticate active credentials and renew the session
+      description: Requires CSRF initialization and X-XSRF-TOKEN header. Five attempts per minute per hashed email/IP key; an additional IP limit applies.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: {type: string, format: email}
+                password: {type: string}
+      responses:
+        '200': {description: Current user and action permissions}
+        '422': {description: Generic invalid or inactive credentials, or validation error}
+        '419': {description: Missing or expired CSRF state}
+        '429': {description: Too many attempts; honor Retry-After}
+  /api/v1/auth/logout:
+    post:
+      summary: Invalidate the current session
+      responses:
+        '204': {description: Signed out}
+        '401': {description: Not authenticated}
+  /api/v1/me:
+    get:
+      summary: Get current account and explicit action permissions
+      responses:
+        '200': {description: User data without password or remember token}
+        '401': {description: Unauthenticated or account deactivated}
+  /api/v1/donors:
+    get:
+      summary: Paginated donor search within the caller's permitted scope
+      parameters:
+        - {in: query, name: q, schema: {type: string, maxLength: 120}}
+        - {in: query, name: blood_type, schema: {$ref: '#/components/schemas/BloodType'}}
+        - {in: query, name: page, schema: {type: integer, minimum: 1}}
+        - {in: query, name: per_page, schema: {type: integer, minimum: 1, maximum: 50, default: 10}}
+      responses:
+        '200': {description: Donor resources with data, links and meta pagination fields}
+        '401': {description: Not authenticated}
+        '403': {description: Role has no donor-read permission}
+        '422': {description: Invalid filters}
+    post:
+      summary: Register a donor and audit the write atomically
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: {type: string, format: uuid}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/DonorInput'}
+      responses:
+        '201': {description: Donor created}
+        '200': {description: Same key and original payload replayed; existing donor returned}
+        '409': {description: Key reused with a different creation payload}
+        '401': {description: Not authenticated}
+        '403': {description: Not permitted to create donors}
+        '422': {description: Invalid input or missing idempotency key}
+  /api/v1/donors/{donor}:
+    parameters:
+      - {in: path, name: donor, required: true, schema: {type: string, format: uuid}}
+    get:
+      summary: Retrieve one accessible donor
+      responses:
+        '200':
+          description: Donor resource
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: {$ref: '#/components/schemas/Donor'}
+        '404': {description: Missing or outside the caller's record scope}
+        '403': {description: Role has no donor-read permission}
+    patch:
+      summary: Correct a donor using the current version and a required reason
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - {$ref: '#/components/schemas/DonorInput'}
+                - type: object
+                  required: [version, reason]
+                  properties:
+                    version: {type: integer, minimum: 1}
+                    reason: {type: string, minLength: 3, maxLength: 500}
+      responses:
+        '200': {description: Updated resource with incremented version}
+        '409': {description: Stale version; retrieve the current record before retrying}
+        '404': {description: Missing or inaccessible record}
+        '403': {description: Not permitted to correct donors}
+        '422': {description: Invalid input or attempted server-owned field injection}
+  /api/v1/audit-logs:
+    get:
+      summary: Restricted paginated activity log
+      parameters:
+        - {in: query, name: q, schema: {type: string, maxLength: 120}}
+        - {in: query, name: page, schema: {type: integer, minimum: 1}}
+        - {in: query, name: per_page, schema: {type: integer, minimum: 1, maximum: 50}}
+      responses:
+        '200': {description: Redacted audit resources with actor label, action, subject ID, reason, changed field names, request ID and UTC timestamps}
+        '403': {description: Audit permission required}
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: blood_repository_session
+      description: HttpOnly cookie. All browser writes also require X-XSRF-TOKEN from the decoded XSRF-TOKEN cookie. No localStorage tokens.
+  schemas:
+    BloodType:
+      type: string
+      enum: [O+, O-, A+, A-, B+, B-, AB+, AB-]
+    DonorInput:
+      type: object
+      required: [name, blood_type, municipality]
+      properties:
+        name: {type: string, minLength: 2, maxLength: 120}
+        blood_type: {$ref: '#/components/schemas/BloodType'}
+        municipality: {type: string, minLength: 2, maxLength: 100}
+    Donor:
+      allOf:
+        - {$ref: '#/components/schemas/DonorInput'}
+        - type: object
+          properties:
+            id: {type: string, format: uuid}
+            record_status: {type: string, enum: [for_review]}
+            version: {type: integer}
+            created_at: {type: string, format: date-time}
+            updated_at: {type: string, format: date-time}
+            can_update: {type: boolean}
+    Error:
+      type: object
+      required: [message, code, request_id]
+      properties:
+        message: {type: string}
+        code: {type: string}
+        request_id: {type: string, format: uuid}
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: {type: string}

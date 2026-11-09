@@ -1,0 +1,35 @@
+/.tools/
+/tmp/
+**/node_modules/
+**/vendor/
+**/.env
+**/.env.*
+!**/.env.example
+**/database/*.sqlite*
+/debug.log
+
+# Local credentials, exports, backups and editor state.
+**/auth.json
+**/.npmrc.local
+**/*.sqlite*
+**/*.db
+**/*.db-journal
+**/*.sql
+**/*.sql.gz
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+*.log
+/.vscode/
+/.idea/
+/.codex/
+/.agents/
+.DS_Store
+Thumbs.db
+
+# Original course/reference binaries are local material, not app source.
+/IT SIA - Documents/
+/IT-SIA - Synthesized-Project/*.pdf
+/IT-SIA - Synthesized-Project/*.docx
+~$*
