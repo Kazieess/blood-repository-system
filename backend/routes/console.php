@@ -5,6 +5,7 @@ use App\Actions\StockEvaluator;
 use App\Models\BackupRun;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Str;
 
@@ -16,6 +17,11 @@ Artisan::command('stock:evaluate', function (): void {
     app(StockEvaluator::class)->evaluate();
     $this->info('Stock conditions reconciled.');
 })->purpose('Reconcile configured stock alerts, including time-driven expiry');
+
+Artisan::command('repository:scheduler-heartbeat', function (): void {
+    Cache::put('repository.scheduler_heartbeat', time(), 600);
+})->purpose('Record a private scheduler heartbeat');
+Schedule::command('repository:scheduler-heartbeat')->everyMinute()->withoutOverlapping();
 
 Schedule::command('stock:evaluate')->everyMinute()->withoutOverlapping();
 

@@ -1,0 +1,7 @@
+import { escapeHtml as e } from './ui.js';
+import { timestamp } from './workspace-ui.js';
+export function availabilityView(result) {
+  const current = result.state === 'available' && new Date(result.valid_until).getTime() > Date.now();
+  const heading = current ? 'Published blood availability' : result.state === 'stale' || result.state === 'available' ? 'Availability needs an update' : 'Availability is not published';
+  return '<section class="availability-intro"><p class="eyebrow">DAVAO DEL SUR</p><h1>' + heading + '</h1><p>Availability is a published snapshot, not a reservation or guarantee of release. Contact authorized staff to confirm.</p><p>' + (result.published_at ? 'Last published: ' + e(timestamp(result.published_at)) : 'No approved snapshot is available.') + '</p><button class="button secondary" id="refresh-availability">Refresh availability</button></section>' + (current ? result.data.length ? '<ul class="availability-grid" aria-label="Published stock counts">' + result.data.map(row => '<li><h2>' + e(row.blood_type) + '</h2><dl><div><dt>Component</dt><dd>' + e(row.component) + '</dd></div><div><dt>Location</dt><dd>' + e(row.location) + '</dd></div><div><dt>Published units</dt><dd>' + e(row.units) + '</dd></div></dl></li>').join('') + '</ul>' : '<p class="notice">No usable units were included in this publication. Contact staff for assistance.</p>' : '<p class="notice">Current counts are unavailable. Please check again later or contact the repository.</p>');
+}

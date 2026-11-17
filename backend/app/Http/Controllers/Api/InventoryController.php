@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Actions\StockEvaluator;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\AvailabilitySnapshot;
 use App\Models\BloodUnit;
+use App\Models\Donation;
 use App\Models\InventoryEvent;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
@@ -25,7 +27,7 @@ class InventoryController extends Controller
 
     private function present(BloodUnit $unit): array
     {
-        return ['id' => $unit->id, 'reference' => $unit->reference, 'blood_type' => $unit->blood_type, 'component' => $unit->component, 'location' => $unit->location, 'collected_at' => $unit->collected_at->toISOString(), 'expires_at' => $unit->expires_at->toISOString(), 'status' => $unit->status, 'expired' => $unit->expires_at->lessThanOrEqualTo(now()), 'verified_at' => $unit->verified_at?->toISOString(), 'version' => $unit->version];
+        return ['id' => $unit->id, 'reference' => $unit->reference, 'blood_type' => $unit->blood_type, 'component' => $unit->component, 'location' => $unit->location, 'collected_at' => $unit->collected_at->toISOString(), 'expires_at' => $unit->expires_at->toISOString(), 'status' => $unit->status, 'expired' => $unit->expires_at->lessThanOrEqualTo(now()), 'verified_at' => $unit->verified_at?->toISOString(), 'version' => $unit->version, 'source_linked' => $unit->donation_id !== null];
     }
 
     public function index(Request $request): JsonResponse
@@ -108,10 +110,15 @@ class InventoryController extends Controller
         $input = $request->validate(['version' => ['required', 'integer', 'min:1'], 'action' => ['required', Rule::in(['verify', 'quarantine', 'spoil', 'release', 'discard'])], 'reason' => ['required', 'string', 'min:3', 'max:500'], 'verification_confirmed' => ['required_if:action,verify', 'accepted_if:action,verify']]);
         DB::transaction(function () use ($request, $unit, $input, $evaluator): void {
             $record = BloodUnit::findOrFail($unit);
+            if ($record->donation_id) {
+                Donation::whereKey($record->donation_id)->lockForUpdate()->firstOrFail();
+            }
+            $record = BloodUnit::whereKey($unit)->lockForUpdate()->firstOrFail();
             $allowed = ['verify' => ['pending'], 'quarantine' => ['pending', 'available'], 'spoil' => ['pending', 'available', 'quarantined'], 'release' => ['available'], 'discard' => ['pending', 'available', 'quarantined', 'spoiled']];
             abort_unless(in_array($record->status, $allowed[$input['action']], true), 409, 'This transition is not available.');
             if (in_array($input['action'], ['verify', 'release'], true)) {
                 abort_if($record->expires_at->lessThanOrEqualTo(now()), 409, 'This unit has expired.');
+                abort_unless($record->donation_id && $record->donation()->where('status', 'completed')->exists(), 409, 'Link a completed source donation before verification or release.');
             }
             if ($input['action'] === 'release') {
                 abort_unless($record->verified_at, 409);
@@ -132,6 +139,7 @@ class InventoryController extends Controller
 
     private function event(Request $request, BloodUnit $unit, string $action, string $reason): void
     {
+        AvailabilitySnapshot::whereNull('withdrawn_at')->where('valid_until', '>', now())->update(['valid_until' => now()]);
         InventoryEvent::create(['blood_unit_id' => $unit->id, 'actor_id' => $request->user()->id, 'action' => $action, 'reason' => $reason, 'created_at' => now()]);
         AuditLog::create(['actor_id' => $request->user()->id, 'action' => 'inventory.'.$action, 'subject_id' => $unit->id, 'reason' => $reason, 'changed_fields' => ['inventory_status'], 'request_id' => $request->attributes->get('request_id')]);
     }

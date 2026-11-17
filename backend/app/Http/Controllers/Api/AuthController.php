@@ -21,6 +21,7 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+        $request->session()->put('account_session_version', (int) Auth::user()->session_version);
 
         try {
             AuditLog::create([

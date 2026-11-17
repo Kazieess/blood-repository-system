@@ -6,12 +6,12 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 test('both frontend entries reference existing relocated stylesheets and scripts', async () => {
-  for (const entry of ['index.html', 'connected.html']) {
+  for (const entry of ['index.html', 'connected.html', 'availability.html', 'recovery.html']) {
     const html = await readFile(resolve(root, entry), 'utf8');
     const links = [...html.matchAll(/(?:href|src)="([^"#]+\.(?:css|js))"/g)].map(match => match[1]);
     assert.ok(links.length >= 3);
-    for (const path of links) { assert.ok(!path.startsWith('http')); await access(resolve(root, path)); }
-    assert.ok(html.includes('css/styles.css')); assert.ok(html.includes('css/experience.css'));
+    for (const path of links) { assert.ok(!path.startsWith('http')); await access(resolve(root, path.replace(/^\//, ''))); }
+    assert.ok(html.includes('css/styles.css')); if (['index.html', 'connected.html'].includes(entry)) assert.ok(html.includes('css/experience.css'));
   }
 });
 test('the connected entry dependency graph never imports the fictional donor store', async () => {

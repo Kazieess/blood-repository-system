@@ -4,6 +4,9 @@ namespace Tests\Feature;
 
 use App\Actions\StockEvaluator;
 use App\Models\AuditLog;
+use App\Models\BloodUnit;
+use App\Models\Donation;
+use App\Models\Donor;
 use App\Models\Role;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -30,7 +33,13 @@ class InventoryAlertTest extends TestCase
 
     private function unit(string $reference, int $hours = 2): array
     {
-        return $this->postJson('/api/v1/inventory', ['reference' => $reference, 'blood_type' => 'O+', 'component' => 'Fictional component', 'location' => 'Fictional store', 'collected_at' => now()->subDay()->toISOString(), 'expires_at' => now()->addHours($hours)->toISOString(), 'reason' => 'Documented fictional unit'], ['Idempotency-Key' => (string) Str::uuid()])->assertCreated()->json('data');
+        $unit = $this->postJson('/api/v1/inventory', ['reference' => $reference, 'blood_type' => 'O+', 'component' => 'Fictional component', 'location' => 'Fictional store', 'collected_at' => now()->subDay()->toISOString(), 'expires_at' => now()->addHours($hours)->toISOString(), 'reason' => 'Documented fictional unit'], ['Idempotency-Key' => (string) Str::uuid()])->assertCreated()->json('data');
+        $actor = auth()->user();
+        $donor = Donor::factory()->create(['created_by' => $actor->id, 'updated_by' => $actor->id]);
+        $source = Donation::create(['donor_id' => $donor->id, 'reference' => 'DON-'.$reference, 'donated_on' => now('Asia/Manila')->subDay()->toDateString(), 'location' => 'Fictional source', 'status' => 'completed', 'created_by' => $actor->id, 'creation_key' => (string) Str::uuid(), 'creation_hash' => str_repeat('a', 64), 'version' => 1]);
+        BloodUnit::whereKey($unit['id'])->update(['donation_id' => $source->id]);
+
+        return $unit;
     }
 
     private function transition(array $unit, string $action, int $version): TestResponse
@@ -148,7 +157,7 @@ class InventoryAlertTest extends TestCase
             throw new \RuntimeException('Fictional audit failure');
         });
         try {
-            $this->transition(['id' => $id], 'verify', 1)->assertStatus(500);
+            $this->transition(['id' => $id], 'quarantine', 1)->assertStatus(500);
             $this->assertDatabaseHas('blood_units', ['id' => $id, 'status' => 'pending', 'version' => 1]);
             $this->assertDatabaseCount('inventory_events', 1);
         } finally {

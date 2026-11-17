@@ -215,7 +215,7 @@ class FoundationTest extends TestCase
 
     public function test_database_connection_and_health_check_are_available(): void
     {
-        $this->assertSame('sqlite', DB::connection()->getDriverName());
+        $this->assertSame(config('database.default'), DB::connection()->getDriverName());
         $this->getJson('/api/v1/health')->assertOk()->assertJsonPath('status', 'ok');
     }
 

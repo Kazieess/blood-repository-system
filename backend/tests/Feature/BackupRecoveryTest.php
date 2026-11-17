@@ -13,8 +13,10 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use PDO;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+#[Group('sqlite-only')]
 class BackupRecoveryTest extends TestCase
 {
     use DatabaseMigrations;

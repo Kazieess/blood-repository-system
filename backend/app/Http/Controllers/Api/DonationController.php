@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\BloodUnit;
 use App\Models\Donation;
 use App\Models\Donor;
 use Illuminate\Database\QueryException;
@@ -76,6 +77,10 @@ class DonationController extends Controller
         $input = $request->validate(['donated_on' => ['required', 'date_format:Y-m-d', 'before_or_equal:'.now('Asia/Manila')->toDateString()], 'location' => ['required', 'string', 'min:2', 'max:100'], 'status' => ['required', Rule::in(['completed', 'voided'])], 'version' => ['required', 'integer', 'min:1'], 'reason' => ['required', 'string', 'min:3', 'max:500']]);
         abort_if($record->status === 'voided' && $input['status'] !== 'voided', 409, 'A voided event cannot be counted again.');
         DB::transaction(function () use ($request, $record, $input): void {
+            $record = Donation::whereKey($record->id)->lockForUpdate()->firstOrFail();
+            if ($input['status'] === 'voided' || $input['donated_on'] !== $record->donated_on) {
+                abort_if(BloodUnit::where('donation_id', $record->id)->exists(), 409, 'Linked stock prevents voiding or changing the collection date.');
+            }
             $fields = Arr::only($input, ['donated_on', 'location', 'status']);
             $changed = Donation::whereKey($record->id)->where('version', $input['version'])->update([...$fields, 'version' => DB::raw('version + 1'), 'updated_at' => now()]);
             abort_if($changed !== 1, 409);

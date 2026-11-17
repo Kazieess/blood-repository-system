@@ -59,7 +59,7 @@ async function render(focus = true) {
   main.setAttribute('aria-busy', 'true'); main.innerHTML = view.loading();
   try {
     let html;
-    if (current.parts.length > 2 || current.id && !['donors', 'donations', 'inventory', 'assignments', 'clinical'].includes(current.section) || ['donations', 'clinical'].includes(current.section) && !current.id) throw new ApiError('This page does not exist.', 404);
+    if (current.parts.length > 2 || current.id && !['donors', 'donations', 'inventory', 'assignments', 'clinical', 'trace'].includes(current.section) || ['donations', 'clinical', 'trace'].includes(current.section) && !current.id) throw new ApiError('This page does not exist.', 404);
     if (current.section === 'login' || current.section === 'access') { navigate('overview'); return; }
     if (current.section === 'overview') {
       const [donors, activity] = await Promise.all([

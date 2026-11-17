@@ -11,6 +11,16 @@ class FrontendController extends Controller
         return response()->file(base_path('../frontend/index.html'));
     }
 
+    public function recovery(): BinaryFileResponse
+    {
+        return response()->file(base_path('../frontend/recovery.html'));
+    }
+
+    public function availability(): BinaryFileResponse
+    {
+        return response()->file(base_path('../frontend/availability.html'));
+    }
+
     public function workspace(): BinaryFileResponse
     {
         return response()->file(base_path('../frontend/connected.html'));

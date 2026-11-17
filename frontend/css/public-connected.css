@@ -1,0 +1,15 @@
+.public-connected { width: min(100% - 32px, 1000px); margin: 32px auto; overflow-wrap: anywhere; }
+.public-connected h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.15; }
+.public-connected .availability-intro { max-width: 65ch; margin-bottom: 24px; }
+.availability-grid { padding: 0; list-style: none; display: grid; gap: 16px; }
+.availability-grid li { background: var(--white, #fff); border: 1px solid #b8c2c9; border-top: 4px solid var(--red, #ad2835); border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px #1329380d; }
+.availability-grid h2 { font-size: 28px; margin: 0 0 12px; }
+.availability-grid dl { margin: 0; display: grid; gap: 8px; }
+.availability-grid dt { font-size: 14px; color: #475967; }
+.availability-grid dd { margin: 0; font-weight: 600; }
+.public-connected .recovery-form { max-width: 560px; display: grid; gap: 18px; }
+.public-connected .recovery-form .field { display: grid; gap: 6px; }
+.public-connected input { min-width: 0; width: 100%; min-height: 44px; }
+.public-connected button, .public-connected a.button { min-height: 44px; }
+@media (min-width: 640px) { .availability-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .availability-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

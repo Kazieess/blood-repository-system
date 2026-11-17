@@ -7,6 +7,7 @@ use App\Models\AuditLog;
 use App\Models\ClinicalEntry;
 use App\Models\ClinicalField;
 use App\Models\ClinicalRevision;
+use App\Models\Donation;
 use App\Models\Donor;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\QueryException;
@@ -36,7 +37,7 @@ class ClinicalController extends Controller
 
     private function present(ClinicalEntry $entry): array
     {
-        return ['id' => $entry->id, 'category' => $entry->category, 'payload' => $entry->payload, 'source_reference' => $entry->source_reference, 'observed_at' => $entry->observed_at->toISOString(), 'status' => $entry->status, 'recorded_by' => $entry->recorded_by, 'updated_by' => $entry->updated_by, 'reviewed_by' => $entry->reviewed_by, 'reviewed_at' => $entry->reviewed_at?->toISOString(), 'version' => $entry->version];
+        return ['id' => $entry->id, 'donation_id' => $entry->donation_id, 'category' => $entry->category, 'payload' => $entry->payload, 'source_reference' => $entry->source_reference, 'observed_at' => $entry->observed_at->toISOString(), 'status' => $entry->status, 'recorded_by' => $entry->recorded_by, 'updated_by' => $entry->updated_by, 'reviewed_by' => $entry->reviewed_by, 'reviewed_at' => $entry->reviewed_at?->toISOString(), 'version' => $entry->version];
     }
 
     private function audit(Request $request, string $action, string $subject): void
@@ -98,6 +99,11 @@ class ClinicalController extends Controller
     {
         $this->permit($request, $donor, $category, 'write');
         $input = $this->fields($request, $category);
+        $link = $request->validate(['donation_id' => ['nullable', 'uuid']]);
+        if (! empty($link['donation_id'])) {
+            Donation::where('donor_id', $donor)->findOrFail($link['donation_id']);
+            $input['donation_id'] = $link['donation_id'];
+        }
         $key = $request->header('Idempotency-Key');
         abort_unless(Str::isUuid($key), 422, 'A UUID recording key is required.');
         $hash = hash('sha256', json_encode([$donor, $category, $input], JSON_THROW_ON_ERROR));

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -22,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        ResetPassword::createUrlUsing(fn ($user, string $token) => rtrim(config('app.url'), '/').'/recovery#token='.rawurlencode($token).'&email='.rawurlencode($user->getEmailForPasswordReset()));
         RateLimiter::for('staff-login', fn (Request $request): array => [
             Limit::perMinute(5)->by(hash('sha256', strtolower((string) $request->input('email')).'|'.$request->ip())),
             Limit::perMinute(30)->by('login-ip:'.$request->ip()),

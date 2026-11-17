@@ -12,7 +12,7 @@ class RequireActiveAccount
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user()?->active) {
+        if (! $request->user()?->active || (int) $request->session()->get('account_session_version', 1) !== (int) ($request->user()->session_version ?? 1)) {
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
