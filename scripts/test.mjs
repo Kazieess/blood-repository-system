@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const mode = process.argv[2] ?? 'frontend';
-if (!['syntax', 'frontend', 'backend', 'all'].includes(mode)) {
-  console.error('Use syntax, frontend, backend or all.');
+if (!['syntax', 'frontend', 'backend', 'mysql', 'all'].includes(mode)) {
+  console.error('Use syntax, frontend, backend, mysql or all.');
   process.exit(2);
 }
 function run(command, args, cwd = root, env = process.env) {
@@ -29,7 +29,7 @@ if (mode === 'frontend' || mode === 'all') {
   if (!files.length) throw new Error('No frontend tests found.');
   run(process.execPath, ['--test', ...files.map(file => resolve(root, 'frontend/tests', file))]);
 }
-if (mode === 'backend' || mode === 'all') {
+if (mode === 'backend' || mode === 'mysql' || mode === 'all') {
   const backend = resolve(root, 'backend');
   if (!existsSync(resolve(backend, 'vendor/autoload.php'))) {
     console.error('Install backend/composer.lock dependencies first; see README.md.');
@@ -39,6 +39,10 @@ if (mode === 'backend' || mode === 'all') {
   const php = process.env.PHP_BINARY || (process.platform === 'win32' && existsSync(portable) ? portable : 'php');
   // Explicit test settings take precedence over shell/.env database values.
   const env = { ...process.env, APP_ENV: 'testing', DB_CONNECTION: 'sqlite', DB_DATABASE: ':memory:', DB_URL: '', CACHE_STORE: 'array', SESSION_DRIVER: 'array', QUEUE_CONNECTION: 'sync', MAIL_MAILER: 'array' };
+  if (mode === 'mysql') {
+    if (process.env.REPOSITORY_MYSQL_TEST !== 'isolated') throw new Error('Set REPOSITORY_MYSQL_TEST=isolated only for a disposable blood_repository_ci database.');
+    Object.assign(env, { DB_CONNECTION: 'mysql', DB_DATABASE: 'blood_repository_ci' });
+  }
   run(php, ['artisan', 'config:clear', '--no-interaction'], backend, env);
-  run(php, ['artisan', 'test', '--compact'], backend, env);
+  run(php, mode === 'mysql' ? ['artisan', 'test', '--compact', '--configuration=phpunit.mysql.xml', '--exclude-group=sqlite-only'] : ['artisan', 'test', '--compact'], backend, env);
 }

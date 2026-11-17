@@ -12,7 +12,8 @@
     "check": "node scripts/test.mjs syntax",
     "test": "node scripts/test.mjs frontend",
     "test:backend": "node scripts/test.mjs backend",
-    "test:all": "node scripts/test.mjs all"
+    "test:all": "node scripts/test.mjs all",
+    "test:mysql": "node scripts/test.mjs mysql"
   },
   "devDependencies": {
     "happy-dom": "21.0.4"
