@@ -7,10 +7,12 @@ Use this guide to test the currently implemented frontend and backend foundation
 | Version | URL after starting Laravel | What it tests |
 | --- | --- | --- |
 | Connected staff workspace, frontend Phase 2 | http://127.0.0.1:8000/workspace | Real login, server permissions, saved donor records, corrections and audit activity |
+| Connected public availability | http://127.0.0.1:8000/availability | Explicitly published aggregate snapshots, freshness and withdrawal; no private donor data |
+| Password assistance | http://127.0.0.1:8000/recovery | Disabled-mail guidance and reset-link consumption; use `/recovery#change` while signed in to change your password |
 | Public and staff demonstration | http://127.0.0.1:8000/ | Hero, locator examples and simulated operational screens using fictional in-memory records |
 | Minimal backend health response | http://127.0.0.1:8000/api/v1/health | Application/database health endpoint; not a complete monitoring system |
 
-The demo's role selector does not sign you into the connected workspace. Demo changes reset on reload; connected saves persist. Assigned donation history, inventory, in-app alerts, restricted clinical records and local SQLite recovery are now connected. Follow [the improvements walkthrough](IMPROVEMENTS.md) for their setup and checks. Public availability, reports and external SMS in the demo remain illustrations.
+The demo's role selector does not sign you into the connected workspace. Demo changes reset on reload; connected saves persist. Assigned donation history, inventory, in-app alerts, restricted clinical records and local SQLite recovery are now connected. Follow [the improvements walkthrough](IMPROVEMENTS.md) for their setup and checks. Connected traceability, reports, publication and staff-account checks are also in that walkthrough. Public availability, reports and external SMS in the independent demo remain illustrations.
 
 Use fictional test data. Local browser testing writes to your configured development database; automated backend tests use isolated SQLite databases. Do not use a production database for these steps. MySQL validation and production readiness remain separate work.
 
@@ -148,7 +150,7 @@ Create additional fictional accounts using the same `-Action user` command, each
 - [ ] For a denied feature, enter its URL directly: `/workspace#/donors` or `/workspace#/audit`. Expected: access denied, not a hidden-link-only restriction.
 - [ ] Create a donor as a coordinator. Expected: the coordinator can find and correct that record.
 - [ ] Copy an unassigned donor profile URL, then open it as the coordinator. Expected: not found (404) without disclosing that out-of-scope record.
-- [ ] As Report Viewer, verify the overview/guide remain useful without invented donor totals or an operational reports page.
+- [ ] As Report Viewer, verify inventory/expiry reports work while donor details and donation reports remain denied.
 
 Red Cross Administrators manage explicit assignments through a reference-only queue. Existing records begin assigned to their creator; new records receive the creator assignment under the provisioned create permission. Clinical actions require separate grants. System Administrator has audit and technical backups without operational donor access. See [the current matrix](../docs/backend/OPERATIONS.md).
 
@@ -213,7 +215,7 @@ Run all frontend tests:
 npm.cmd test
 ```
 
-Expected current baseline: **37 passing tests**, zero failures and zero skipped tests. These cover the demo model/workflow, selected contrast pairs, connected DOM workflows, API-client behavior, workspace views and asset references. The connected DOM scenario simulates HTTP responses; it does not prove a live browser-to-database workflow. Use the manual connected checklist and backend HTTP suite for that boundary.
+Expected current baseline: **45 passing tests**, zero failures and zero skipped tests. These cover the demo model/workflow, selected contrast pairs, connected DOM workflows, API-client behavior, workspace views and asset references. The connected DOM scenario simulates HTTP responses; it does not prove a live browser-to-database workflow. Use the manual connected checklist and backend HTTP suite for that boundary.
 
 Syntax-only checks:
 
@@ -231,7 +233,7 @@ The new cross-platform entry also supports `npm.cmd run test:backend`, or `npm.c
 powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\backend.ps1" -Action test
 ```
 
-Expected recorded foundation baseline: **41 passing tests**; test counts may change as features are added. Check the actual run's result rather than assuming this baseline proves a fresh pass.
+Expected recorded connected baseline: **59 passing tests with 510 assertions**; test counts may change as features are added. Check the actual run's result rather than assuming this baseline proves a fresh pass.
 
 The suite covers real authentication and authorization, validation, persistence, idempotency, stale corrections, transactional audit behavior, safe errors, asset delivery and an actual HTTP session/CSRF flow. It uses isolated SQLite data, not the manually populated development records. It does not establish MySQL compatibility.
 
@@ -277,6 +279,6 @@ Blocked or not-run checks:
 Follow-up needed:
 ```
 
-Also complete the new [connected improvements walkthrough](IMPROVEMENTS.md): assignments, donation counts, stock transitions/expiry, recipient alerts, clinical recording/review, and actual isolated recovery. Passing these checks validates the current local milestone. It does not complete deferred clinical modules, security/load assessments, MySQL verification, backup restoration or a production release review.
+Also complete the [connected improvements walkthrough](IMPROVEMENTS.md): assignments, donation counts and source links, stock transitions/expiry, recipient alerts, clinical recording/review, isolated SQLite recovery, aggregate reports/publication and staff/password administration. Passing these checks validates the current local milestone. It does not establish clinical interpretation, security/load acceptance, MySQL compatibility, production backup restoration or release readiness. Browser/device and screen-reader checks need observed results; DOM tests alone do not establish them.
 
 Related references: [Phase 2 scope](PHASE-2.md), [verification notes](QA.md), [frontend routes](README.md), [backend setup](../backend/README.md), [permission matrix and acceptance criteria](../docs/backend/FOUNDATION.md).

@@ -35,7 +35,7 @@ On mobile, Workspace guide links to permitted operational pages. Desktop tables 
 
 1. As Red Cross Administrator, open Staff assignments and select a donor reference. Grant an active operational worker access, choose only their authorized clinical actions, add a reason, review and save.
 2. As that worker, confirm the donor appears. Open Donation history from the profile and record an actual completed documentary event with a unique reference, date and collection location.
-3. Reload to verify persistence and count. Correct or void the event with a reason. Voided events remain visible, stop contributing to the count and cannot be reactivated.
+3. Reload to verify persistence and count. Use an event without linked blood units to test correction or voiding with a reason. Linked events cannot be voided or have their donation date changed. Voided events remain visible, stop contributing to the count and cannot be reactivated.
 4. Revoke the assignment as administrator. Subsequent donor/history/clinical requests must be denied. Re-grant retains an increasing version, protecting against stale forms.
 
 Counts describe recorded completed events, not guaranteed lifetime history. No duplicate-person reconciliation or medical donation interval is inferred. Administrators do not bypass assignment checks for patient details.
@@ -43,8 +43,8 @@ Counts describe recorded completed events, not guaranteed lifetime history. No d
 ## Inventory and shortage alerts
 
 1. As Red Cross Administrator or Personnel, register a fictional bag with recorded blood type, approved component/location labels, collection timestamp and entered expiry timestamp. Form times use Philippine time; no shelf-life calculation/default expiry is supplied.
-2. Confirm the unit starts Pending and is absent from Available. Record authorized verification with its explicit confirmation and reason.
-3. Register a matching verified unit with a later expiry. Available results must list the earlier expiry first. Ordering does not authorize suitability or release.
+2. Confirm the unit starts Pending and is absent from Available. As an assigned donor worker with inventory write access, link its completed source donation by documentary reference. Its donation date must match the collection date in Philippine time. Then record authorized verification with its explicit confirmation and reason.
+3. Register a matching unit with a later expiry, link its completed source donation and verify it. Available results must list the earlier expiry first. Ordering does not authorize suitability or release.
 4. Mark a unit Spoiled. Its text state remains visible and it leaves usable stock. Pending/quarantined/spoiled/expired/released/discarded units are excluded from Available. Stale or repeated terminal actions fail.
 5. As administrator, configure an approved threshold, exact blood type/component/location and responsible inventory staff. No threshold is seeded. Zero usable stock is out-of-stock; a positive count at or below the threshold is low stock.
 6. As a recipient, acknowledge an alert. Awareness does not resolve the shortage. Replenishment above threshold resolves it; a later shortage opens another episode.
@@ -91,3 +91,16 @@ Tests cover assignment isolation, grants/revocation, donation reconciliation, re
 Visual/browser/device/screen-reader review remains unverified: the native/browser automation hosts were unavailable. DOM tests are not pixel rendering or formal accessibility certification. MySQL and production hosting/recovery are not claimed.
 
 See [testing guide](TESTING.md), [current decisions/contracts](../docs/backend/OPERATIONS.md) and [OpenAPI](../docs/backend/openapi.yaml).
+
+## Next connected sequence: traceability, reporting and administration
+
+After pulling this milestone, run the existing setup command to apply additive migrations. Existing data is preserved. Unlinked legacy units require source linking and re-verification before they count as available.
+
+1. Record a completed donation as its assigned worker. On an inventory unit, choose **Link source donation**, enter that donation's documentary reference and a reason, review, then save. Its Philippine collection date must match the donation date. Verify the unit again. Open **Linked blood units** from the donor profile to check the trace. The source link is permanent; check the documentary source carefully.
+2. In **Inventory reports**, compare grouped stock totals and expiry filters with saved units. Download filtered CSV. **Donation reports** include only your assigned records; a Report Viewer receives inventory/expiry reports only.
+3. As Red Cross Administrator, open **Public availability**, select a location, enter its approved public label and a validity duration, explicitly approve aggregate disclosure, review and publish. Visit http://127.0.0.1:8000/availability without login. Release/spoil a unit and refresh: the previous snapshot must be stale with no counts. Republish when appropriate, or withdraw it. The original / remains a fictional demonstration.
+4. As System Administrator, open **Staff accounts**. Create a fictional account with a unique email, initial password, your current administrator password and a reason. Passwords are hidden in review. Change its role or active status; old sessions must fail on their next request and donor grants must be revoked. Self-demotion/deactivation is blocked.
+5. Open **Change your password** from Workspace guide, or /recovery#change. Test current-password validation and the new login in a separate browser profile. /recovery explicitly states that reset email is unavailable until an approved mail service is configured. No email is sent by the default development configuration.
+6. Run the normal automated checks. The separate npm.cmd run test:mysql command requires a disposable MySQL service and REPOSITORY_MYSQL_TEST=isolated; do not point it at your working database. GitHub CI supplies the isolated service automatically.
+
+Technical preflight (read-only, expected to report missing production configuration locally): from backend, run the compatible PHP executable with artisan repository:deployment-check. It does not deploy anything. Keep the scheduler running during alert/heartbeat testing. Browser visual/device acceptance remains unverified because the browser host is unavailable. Hosting, mail delivery and production MySQL recovery still need the selected deployment environment.

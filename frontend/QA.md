@@ -1,15 +1,16 @@
 # Frontend verification
 
-Review date: 9 November 2026.
+Review date: 18 November 2026.
 
 ## Connected improvement checks
 
-- 41 backend tests pass, including the real-HTTP session/CSRF flow, assigned access, donation counts, controlled stock/expiry, recipient alerts, restricted encrypted clinical history and actual SQLite recovery/tamper checks.
-- 37 frontend tests pass. The new connected operations scenario covers review-before-write, uncertain retries, unsaved entries, Philippine time conversion, stock verification, assignment grants, catalog/results, independent review, alert acknowledgement, isolated restore confirmation and clearing on sign-out.
+- 59 backend tests pass with 510 assertions, including the real-HTTP session/CSRF flow, assigned access, donation counts, controlled stock/expiry, recipient alerts, restricted encrypted clinical history and actual SQLite recovery/tamper checks.
+- 45 frontend tests pass. The new connected operations scenario covers review-before-write, uncertain retries, unsaved entries, Philippine time conversion, stock verification, assignment grants, catalog/results, independent review, alert acknowledgement, isolated restore confirmation and clearing on sign-out.
+- Regression checks also cover late private responses after sign-out/navigation, public-count expiry during refresh, publication retry conflicts, revoked administrator/password sessions and rejection of file-backed SQLite test targets.
 - New screens and modules use the existing same-origin authenticated workspace and contain no demo-store imports.
 - Native/browser automation hosts were unavailable; pixel/device/screen-reader review remains outstanding. MySQL and production recovery are not verified.
 
-## Foundation and Phase 2 checks
+## Historical foundation and Phase 2 checks
 
 - All JavaScript modules pass `node --check`.
 - 37 automated checks pass using `node --test frontend/tests/*.test.mjs`.

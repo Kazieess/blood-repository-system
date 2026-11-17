@@ -2,7 +2,7 @@
 
 Davao del Sur Blood Repository and Donor Monitoring System: an independent interface demo and a Laravel-connected staff workspace. This is a development baseline, not a production release.
 
-The connected workspace implements session authentication, explicit Red Cross assignments, donation history/counts, controlled inventory, recipient-scoped alerts, encrypted clinical entries/revisions, restricted audit and actual local SQLite backup/isolated recovery. See [the improvements walkthrough](frontend/IMPROVEMENTS.md) and [implementation decisions](docs/backend/OPERATIONS.md). No clinical test panels, thresholds or automated medical decisions are seeded.
+The connected workspace implements session authentication, explicit Red Cross assignments, donation history/counts, controlled inventory, recipient-scoped alerts, encrypted clinical entries/revisions, restricted audit and actual local SQLite backup/isolated recovery. The next milestone adds donation-to-unit traceability, aggregate reports/CSV exports, explicit public stock publication, staff-account administration and password recovery/change workflows. See [the improvements walkthrough](frontend/IMPROVEMENTS.md) and [implementation decisions](docs/backend/OPERATIONS.md). No clinical test panels, thresholds or automated medical decisions are seeded.
 
 ## Reproduce the development environment
 
@@ -56,6 +56,8 @@ This creates missing local configuration and applies migrations/role seeds. It d
 | URL | Purpose |
 | --- | --- |
 | http://127.0.0.1:8000/workspace | Authenticated connected workspace |
+| http://127.0.0.1:8000/availability | Administrator-published real stock aggregates |
+| http://127.0.0.1:8000/recovery | Password recovery (email disabled until configured) |
 | http://127.0.0.1:8000/ | Independent fictional public/staff demo |
 
 ## Run checks from the project root
@@ -74,9 +76,9 @@ npm.cmd run test:all
 
 The test entry uses Node's current executable, expands test filenames without shell-specific globs, and propagates failures. Backend tests prefer the ignored Windows `.tools/php84/php.exe` when available, otherwise `php` on PATH. Set `PHP_BINARY` to an absolute compatible runtime path to override that selection.
 
-Backend tests clear cached Laravel configuration and explicitly select isolated SQLite test settings. The HTTP test creates/removes its own temporary database/server. No running development server, local staff account or existing donor records are required. Follow the setup above first to provide an application key. The Windows HTTP test needs normal process-cleanup permissions; restricted sandboxes can prevent teardown.
+Backend tests clear cached Laravel configuration and explicitly select isolated SQLite test settings. Test bootstrapping rejects file-backed SQLite targets, unsupported drivers, database URLs and non-testing environments before migrations; MySQL additionally requires its explicit disposable-database opt-in. The HTTP test creates/removes its own temporary database/server. No running development server, local staff account or existing donor records are required. Follow the setup above first to provide an application key. The Windows HTTP test needs normal process-cleanup permissions; restricted sandboxes can prevent teardown.
 
-Current recorded baseline: **37 frontend tests and 41 backend tests**. Counts are descriptive, not enforced as a substitute for passing results. Manual visual/device testing is separate; see [the full testing guide](frontend/TESTING.md).
+Current recorded baseline: **45 frontend tests and 59 backend tests**. Counts are descriptive, not enforced as a substitute for passing results. Manual visual/device testing is separate; see [the full testing guide](frontend/TESTING.md).
 
 ## Git workflow and private hosting
 
@@ -92,7 +94,7 @@ Review and stage intended files, run checks, then commit with a conventional mes
 
 Git tracks source, tests, lockfiles, branding assets and Markdown project requirements. It ignores `.env`, database files, dependency folders, logs, keys, exports/backups, local tooling/editor state and original course PDF/Word reference binaries. Those files remain on disk. Git is not a backup of your database or recovery secrets.
 
-The committed GitHub Actions workflow runs frontend checks on Linux/Windows and backend tests on Linux/PHP 8.4.27 with SQLite. Actions are pinned to verified commit IDs, permissions are read-only and checkout credentials are not persisted. CI activates only after publishing to GitHub; a committed workflow alone is not a successful cloud run. No deployment job is configured. Configure branch protection/rules on the remote when available; local branch conventions alone do not enforce protection.
+The committed GitHub Actions workflow runs frontend checks on Linux/Windows and backend tests on Linux/PHP 8.4.27 with SQLite and a separate disposable MySQL 8.4.13 service. The MySQL job excludes the SQLite-specific backup/HTTP tests; those remain in the SQLite job. Actions are pinned to verified commit IDs, permissions are read-only and checkout credentials are not persisted. Check the latest Actions result; a committed workflow alone is not a successful cloud run. No deployment job is configured. Configure branch protection/rules on the remote when available; local branch conventions alone do not enforce protection.
 
 To inspect the local history and remote configuration:
 

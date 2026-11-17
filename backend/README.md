@@ -16,15 +16,15 @@ If PowerShell blocks scripts under your current execution policy, run the same a
 
     powershell -ExecutionPolicy Bypass -File scripts/backend.ps1 -Action setup
 
-Setup creates a local .env only if missing, generates an application key only if blank, and runs migrations plus role seeds. It does not replace an existing database. The user command asks for a name, email, role and a hidden password; passwords are never command arguments or printed output. Choose Red Cross Administrator to work with donors, or System Administrator for audit-only access in this milestone. No default user or shared password is seeded.
+Setup creates a local .env only if missing, generates an application key only if blank, and runs migrations plus role seeds. It does not replace an existing database. The user command asks for a name, email, role and a hidden password; passwords are never command arguments or printed output. Choose Red Cross Administrator to work with donors, or System Administrator for staff accounts, restricted audit and local backup/recovery administration. No default user or shared password is seeded.
 
-Open http://127.0.0.1:8000/workspace to sign in. The public frontend prototype is at http://127.0.0.1:8000/. The original independent static demo can still run on port 8080 or VS Code Live Server.
+Open http://127.0.0.1:8000/workspace to sign in. Approved aggregate snapshots are at http://127.0.0.1:8000/availability and password assistance is at http://127.0.0.1:8000/recovery. The public frontend prototype is at http://127.0.0.1:8000/. The original independent static demo can still run on port 8080 or VS Code Live Server.
 
 The connected entry uses frontend/connected.html and src/connected.js. It requests real API data and does not import the fictional frontend model. Static Live Server cannot provide this backend; use port 8000 for actual sign-in and persisted records.
 
 ## Database status
 
-The runnable development database is SQLite at database/database.sqlite. It is ignored by Git and contains only role seeds until you provision an account and add records. MySQL remains the intended production engine. It has NOT yet been tested against an approved MySQL service.
+The runnable development database is SQLite at database/database.sqlite. It is ignored by Git; setup preserves existing accounts and records. A new checkout receives role seeds, without a default account. MySQL remains the intended production engine. It has NOT yet been tested against an approved MySQL service.
 
 For a dedicated MySQL development database, update the ignored .env with DB_CONNECTION=mysql and your DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME and DB_PASSWORD. Use a restricted application account and a separate test database. Then run migrations and tests against that engine before claiming MySQL compatibility. Do not point tests at production.
 
@@ -50,7 +50,7 @@ Laravel Boost is development-only, installed because the generated backend AGENT
 - Minimal health: GET /api/v1/health.
 - Donor creation requires a UUID Idempotency-Key header. Reusing the same actor/key and original input returns the existing record; changed input returns 409.
 - Corrections require the current version and a reason. A stale version returns 409 rather than overwriting a newer record.
-- Coordinators can access only records they created. This is a conservative proposed scope pending barangay access approval.
+- Operational donor access requires an active Red Cross-managed assignment. Creator assignments are added for new registrations; other staff must be assigned explicitly. Roles alone do not bypass assignment or clinical grants.
 - Every protected request checks that the account is still active. Technical administrators do not automatically receive donor access.
 - API errors return safe messages, field errors where appropriate and a request ID. Logs omit request bodies, donor values, credentials and SQL exception text.
 - Donor changes and audit writes commit together. There are no delete endpoints. The audit API is read-only; production database privileges and external log retention still need design.
@@ -68,10 +68,10 @@ For the reproducible root workflow, install frontend development dependencies wi
 
 The backend suite uses isolated SQLite databases. Tests cover authentication, logout, inactive accounts, throttling, record ownership, permissions, safe errors, pagination, validation, idempotency, stale corrections, audit rollback, audit redaction and relocated frontend assets. An additional real-HTTP integration test starts its own temporary server/database to check CSRF cookies, login, persistence, assets and logout; it stops that test server afterwards.
 
-For PHP formatting without a Git repository, run Pint against the edited source paths. The generated --dirty instruction requires Git and is not available until version control is initialized.
+For PHP formatting, run the compatible PHP executable with `vendor/bin/pint --dirty --format agent` from `backend`. Git is initialized; review the resulting diff before committing.
 
 ## Remaining scope
 
-Explicit donor assignments, recorded donation history/counts, inventory/expiry/stock transitions, in-app shortage alerts, restricted encrypted screening/laboratory/eligibility records and actual local SQLite backup/isolated recovery are implemented. Configure clinical grants, approved laboratory fields, stock thresholds/recipients and the scheduler using OPERATIONS.md. Automated clinical interpretation, public production snapshots, reports/exports, account-management UI, password reset delivery, external SMS, MySQL verification, offsite backups and production restore/cutover remain separate work. Use fictional development data.
+Explicit donor assignments, recorded donation history/counts, inventory/expiry/stock transitions, in-app shortage alerts, restricted encrypted screening/laboratory/eligibility records and actual local SQLite backup/isolated recovery are implemented. Configure clinical grants, approved laboratory fields, stock thresholds/recipients and the scheduler using OPERATIONS.md. Donation-to-unit traceability, aggregate reports/CSV exports, explicit public snapshots, staff-account management and password-change/reset-token workflows are also implemented. Automated clinical interpretation, real password-reset email delivery, external SMS, MySQL verification, offsite backups and production restore/cutover remain separate work. No hosting or mail service has been selected. Use fictional development data.
 
-Recorded connected baseline: 41 backend tests and 37 frontend checks passed. The real-HTTP test requires normal Windows process-cleanup permissions; inside a restricted sandbox, run it with the appropriate approval so taskkill can stop its temporary server. A fresh run's output is the evidence for that run.
+Recorded connected baseline: 59 backend tests and 41 frontend checks passed. The real-HTTP test requires normal Windows process-cleanup permissions; inside a restricted sandbox, run it with the appropriate approval so taskkill can stop its temporary server. A fresh run's output is the evidence for that run.

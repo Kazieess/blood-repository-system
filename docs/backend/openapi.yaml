@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Blood Repository Connected API
-  version: 1.1.0
-  description: Session authentication, assigned donor records, donation history, controlled inventory, recipient alerts, restricted clinical entries and local SQLite recovery. Detailed operational paths and schemas are referenced from operations.openapi.json; see OPERATIONS.md for privacy and deployment limits.
+  version: 1.2.0
+  description: Session authentication, assigned donor records, donation history, controlled inventory, recipient alerts, restricted clinical entries, local SQLite recovery, donation-to-unit traceability, aggregate reports, explicit public snapshots and staff/password administration. Detailed operational paths and schemas are referenced from operations.openapi.json; see OPERATIONS.md for privacy and deployment limits.
 servers:
   - url: http://127.0.0.1:8000
 security:
@@ -167,6 +167,33 @@ paths:
     $ref: './operations.openapi.json#/paths/~1api~1v1~1backups'
   /api/v1/backups/{backup}/restore-copy:
     $ref: './operations.openapi.json#/paths/~1api~1v1~1backups~1{backup}~1restore-copy'
+  /api/v1/donors/{donor}/units:
+    $ref: "./operations.openapi.json#/paths/~1api~1v1~1donors~1{donor}~1units"
+  /api/v1/inventory/{unit}/source:
+    $ref: "./operations.openapi.json#/paths/~1api~1v1~1inventory~1{unit}~1source"
+  /api/v1/reports/{kind}:
+    $ref: "./operations.openapi.json#/paths/~1api~1v1~1reports~1{kind}"
+  /api/v1/reports/{kind}/export:
+    $ref: "./operations.openapi.json#/paths/~1api~1v1~1reports~1{kind}~1export"
+  /api/v1/public/availability:
+    $ref: "./operations.openapi.json#/paths/~1api~1v1~1public~1availability"
+  /api/v1/publications:
+    $ref: "./operations.openapi.json#/paths/~1api~1v1~1publications"
+  /api/v1/publications/{snapshot}/withdraw:
+    $ref: "./operations.openapi.json#/paths/~1api~1v1~1publications~1{snapshot}~1withdraw"
+  /api/v1/staff:
+    $ref: "./operations.openapi.json#/paths/~1api~1v1~1staff"
+  /api/v1/staff/{staff}:
+    $ref: "./operations.openapi.json#/paths/~1api~1v1~1staff~1{staff}"
+  /api/v1/auth/recovery:
+    $ref: "./operations.openapi.json#/paths/~1api~1v1~1auth~1recovery"
+  /api/v1/auth/forgot-password:
+    $ref: "./operations.openapi.json#/paths/~1api~1v1~1auth~1forgot-password"
+  /api/v1/auth/reset-password:
+    $ref: "./operations.openapi.json#/paths/~1api~1v1~1auth~1reset-password"
+  /api/v1/auth/password:
+    $ref: "./operations.openapi.json#/paths/~1api~1v1~1auth~1password"
+
 components:
   securitySchemes:
     sessionCookie:

@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Blood Repository Operations API",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Protected connected operations. Detailed access, fields, transitions and recovery limits are in OPERATIONS.md. No MySQL verification or medical interpretation is implied."
   },
   "servers": [
@@ -1644,6 +1644,990 @@
           }
         }
       }
+    },
+    "/api/v1/donors/{donor}/units": {
+      "get": {
+        "summary": "Assigned donation-to-unit trace",
+        "description": "Requires donor assignment and inventory.read. Paginated 10, page >=1. No clinical values. Browser writes require X-XSRF-TOKEN. Errors omit secrets and private values.",
+        "responses": {
+          "200": {
+            "description": "Confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnitTraceList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Requested page."
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "donor",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ]
+    },
+    "/api/v1/inventory/{unit}/source": {
+      "post": {
+        "summary": "Link an unlinked unit to its source",
+        "description": "Requires inventory.write and source-donor assignment. Matching PHT collection date, completed donation and current version. Link is permanent. Unit returns to pending; atomic audit. Browser writes require X-XSRF-TOKEN. Errors omit secrets and private values.",
+        "responses": {
+          "200": {
+            "description": "Confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceLink"
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "unit",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ]
+    },
+    "/api/v1/reports/{kind}": {
+      "get": {
+        "summary": "Filtered aggregate report",
+        "description": "Inventory/expiry require reports.read; donations require donors.read and active assignment. Filters from/to YYYY-MM-DD, exact location, inventory blood_type and page. Page size 25. No donor/clinical values. Browser writes require X-XSRF-TOKEN. Errors omit secrets and private values.",
+        "responses": {
+          "200": {
+            "description": "Confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Inclusive start date. Collection date for inventory, expiry date for expiry, donation date for donations. Timestamp boundaries use Asia/Manila."
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Inclusive end date, on or after from."
+          },
+          {
+            "in": "query",
+            "name": "blood_type",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "O+",
+                "O-",
+                "A+",
+                "A-",
+                "B+",
+                "B-",
+                "AB+",
+                "AB-"
+              ]
+            },
+            "description": "Exact recorded blood type for inventory/expiry; ignored for donation reports."
+          },
+          {
+            "in": "query",
+            "name": "location",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "description": "Exact recorded location."
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Requested page."
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "kind",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "inventory",
+              "expiry",
+              "donations"
+            ]
+          }
+        }
+      ]
+    },
+    "/api/v1/reports/{kind}/export": {
+      "post": {
+        "summary": "Export filtered aggregate CSV",
+        "description": "Same scopes/filters as report. Maximum 5000 groups; formula-safe CSV in JSON csv/filename/row_count. Audit required before delivery. Browser writes require X-XSRF-TOKEN. Errors omit secrets and private values. Query filters apply to the entire export; page does not limit the export.",
+        "responses": {
+          "200": {
+            "description": "Confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsvExport"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Inclusive start date. Collection date for inventory, expiry date for expiry, donation date for donations. Timestamp boundaries use Asia/Manila."
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Inclusive end date, on or after from."
+          },
+          {
+            "in": "query",
+            "name": "blood_type",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "O+",
+                "O-",
+                "A+",
+                "A-",
+                "B+",
+                "B-",
+                "AB+",
+                "AB-"
+              ]
+            },
+            "description": "Exact recorded blood type for inventory/expiry; ignored for donation reports."
+          },
+          {
+            "in": "query",
+            "name": "location",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "description": "Exact recorded location."
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "kind",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "inventory",
+              "expiry",
+              "donations"
+            ]
+          }
+        }
+      ]
+    },
+    "/api/v1/public/availability": {
+      "get": {
+        "summary": "Read approved public stock snapshot",
+        "description": "No authentication. 60 requests/minute. Stale, withdrawn or missing snapshots return no counts; count labels and timestamps only. Browser writes require X-XSRF-TOKEN. Errors omit secrets and private values.",
+        "responses": {
+          "200": {
+            "description": "Confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicAvailability"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/v1/publications": {
+      "get": {
+        "summary": "Recent publications and internal locations",
+        "description": "Red Cross Administrator only; ten most recent publications. No public authentication bypass. Browser writes require X-XSRF-TOKEN. Errors omit secrets and private values.",
+        "responses": {
+          "200": {
+            "description": "Confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        }
+      },
+      "post": {
+        "summary": "Explicitly publish a selected location",
+        "description": "Requires availability.publish. Administrator approves public location/component labels and aggregates. Validity is capped by earliest included expiry and invalidated by stock writes. Retry key must retain the same input. Browser writes require X-XSRF-TOKEN. Errors omit secrets and private values.",
+        "responses": {
+          "201": {
+            "description": "Confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicationInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/publications/{snapshot}/withdraw": {
+      "post": {
+        "summary": "Withdraw a snapshot",
+        "description": "Requires availability.publish. Atomic audit; withdrawal never reactivates older publications. Browser writes require X-XSRF-TOKEN. Errors omit secrets and private values.",
+        "responses": {
+          "200": {
+            "description": "Confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "minLength": 3
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "snapshot",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ]
+    },
+    "/api/v1/staff": {
+      "get": {
+        "summary": "Paginated staff directory",
+        "description": "System Administrator only. q name/email filter, page >=1; page size 20. Explicit response allowlist. Browser writes require X-XSRF-TOKEN. Errors omit secrets and private values.",
+        "responses": {
+          "200": {
+            "description": "Confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            },
+            "description": "Name or email search."
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Requested page."
+          }
+        ]
+      },
+      "post": {
+        "summary": "Provision a staff account",
+        "description": "System Administrator with current-password confirmation. No automatic donor assignment or email. Password 12+ mixed case/number/symbol; duplicate email/key conflict. Audited, hashed credentials. Browser writes require X-XSRF-TOKEN. Errors omit secrets and private values.",
+        "responses": {
+          "201": {
+            "description": "Confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/staff/{staff}": {
+      "patch": {
+        "summary": "Update staff identity and access",
+        "description": "System Administrator with current password and version. Email immutable. Cannot change own access or remove last active administrator. Access changes invalidate sessions/reset tokens and revoke assignments/grants. Browser writes require X-XSRF-TOKEN. Errors omit secrets and private values.",
+        "responses": {
+          "200": {
+            "description": "Confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffCorrection"
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "staff",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ]
+    },
+    "/api/v1/auth/recovery": {
+      "get": {
+        "summary": "Read email recovery availability",
+        "description": "Returns email_recovery_enabled. Off until approved mail is configured; log/array/failover transports cannot be enabled. No authentication required.",
+        "responses": {
+          "200": {
+            "description": "Confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/v1/auth/forgot-password": {
+      "post": {
+        "summary": "Request password recovery email",
+        "description": "Generic response regardless of account match; only active accounts. Disabled service returns 503. Existing login throttle; broker token throttling. No reset links in logs. Browser writes require X-XSRF-TOKEN. Errors omit secrets and private values.",
+        "responses": {
+          "200": {
+            "description": "Confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          },
+          "503": {
+            "description": "Email recovery is disabled or unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "maxLength": 255
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "summary": "Consume a single-use reset token",
+        "description": "Active accounts only, default token expiry 60 minutes. Atomic password/audit/token consumption; invalidates previous sessions. Existing login throttle. Browser writes require X-XSRF-TOKEN. Errors omit secrets and private values.",
+        "responses": {
+          "200": {
+            "description": "Confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordReset"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password": {
+      "post": {
+        "summary": "Change own password",
+        "description": "Active authenticated session plus current password. Rotates session version and keeps current session; other sessions rejected on next request. Browser writes require X-XSRF-TOKEN. Errors omit secrets and private values.",
+        "responses": {
+          "200": {
+            "description": "Confirmed result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "419": {
+            "$ref": "#/components/responses/Error419"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Error500"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChange"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2013,33 +2997,49 @@
           "payload": {
             "type": "object",
             "description": "Laboratory: results keyed by active catalog, optional notes; definitions captured by server. Screening: decision pending/recorded/requires_review and required notes. Eligibility: decision not_assessed/eligible/deferred/not_eligible, required notes and optional staff-entered deferred_until YYYY-MM-DD. No diagnosis is inferred."
+          },
+          "donation_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Optional same-donor documentary donation association. Immutable after recording."
           }
         }
       },
       "ClinicalCorrection": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ClinicalInput"
+        "type": "object",
+        "required": [
+          "source_reference",
+          "observed_at",
+          "payload",
+          "version",
+          "reason"
+        ],
+        "properties": {
+          "source_reference": {
+            "type": "string",
+            "maxLength": 120
           },
-          {
+          "observed_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Explicit UTC/offset instant; UI entry uses Philippine time."
+          },
+          "payload": {
             "type": "object",
-            "required": [
-              "version",
-              "reason"
-            ],
-            "properties": {
-              "version": {
-                "type": "integer",
-                "minimum": 1
-              },
-              "reason": {
-                "type": "string",
-                "minLength": 3,
-                "maxLength": 1000
-              }
-            }
+            "description": "Laboratory: results keyed by active catalog, optional notes; definitions captured by server. Screening: decision pending/recorded/requires_review and required notes. Eligibility: decision not_assessed/eligible/deferred/not_eligible, required notes and optional staff-entered deferred_until YYYY-MM-DD. No diagnosis is inferred."
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 1000
           }
-        ]
+        },
+        "description": "Correct source/time/payload while retaining the immutable donation association. donation_id is not an update field."
       },
       "ClinicalReview": {
         "type": "object",
@@ -2154,6 +3154,717 @@
               "type": "array",
               "items": {
                 "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "SourceLink": {
+        "type": "object",
+        "properties": {
+          "donation_reference": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3
+          }
+        },
+        "required": [
+          "donation_reference",
+          "version",
+          "reason"
+        ]
+      },
+      "PublicationInput": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "public_label": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 2
+          },
+          "valid_minutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1440
+          },
+          "confirmed": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3
+          }
+        },
+        "required": [
+          "location",
+          "public_label",
+          "valid_minutes",
+          "confirmed",
+          "reason"
+        ]
+      },
+      "StaffInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 2
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 255
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "Red Cross Administrator",
+              "Red Cross Personnel",
+              "Barangay Health Coordinator",
+              "Report Viewer",
+              "System Administrator"
+            ]
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 12,
+            "writeOnly": true
+          },
+          "password_confirmation": {
+            "type": "string",
+            "maxLength": 128,
+            "writeOnly": true
+          },
+          "current_password": {
+            "type": "string",
+            "maxLength": 128,
+            "writeOnly": true
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "role",
+          "password",
+          "password_confirmation",
+          "current_password",
+          "reason"
+        ]
+      },
+      "StaffCorrection": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 2
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "Red Cross Administrator",
+              "Red Cross Personnel",
+              "Barangay Health Coordinator",
+              "Report Viewer",
+              "System Administrator"
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "current_password": {
+            "type": "string",
+            "maxLength": 128,
+            "writeOnly": true
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 3
+          }
+        },
+        "required": [
+          "name",
+          "role",
+          "active",
+          "version",
+          "current_password",
+          "reason"
+        ]
+      },
+      "PasswordChange": {
+        "type": "object",
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "maxLength": 128,
+            "writeOnly": true
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 12,
+            "writeOnly": true
+          },
+          "password_confirmation": {
+            "type": "string",
+            "maxLength": 128,
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "current_password",
+          "password",
+          "password_confirmation"
+        ]
+      },
+      "PasswordReset": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 255
+          },
+          "token": {
+            "type": "string",
+            "maxLength": 255,
+            "writeOnly": true
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 12,
+            "writeOnly": true
+          },
+          "password_confirmation": {
+            "type": "string",
+            "maxLength": 128,
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "email",
+          "token",
+          "password",
+          "password_confirmation"
+        ]
+      },
+      "PublicAvailability": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "available",
+              "stale",
+              "unavailable"
+            ]
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "blood_type": {
+                  "type": "string",
+                  "maxLength": 3
+                },
+                "component": {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                "location": {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                "units": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "blood_type",
+                "component",
+                "location",
+                "units"
+              ]
+            }
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "valid_until": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "data",
+          "published_at",
+          "valid_until",
+          "message"
+        ]
+      },
+      "Message": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "RecoveryStatus": {
+        "type": "object",
+        "required": [
+          "email_recovery_enabled"
+        ],
+        "properties": {
+          "email_recovery_enabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CsvExport": {
+        "type": "object",
+        "required": [
+          "csv",
+          "filename",
+          "row_count"
+        ],
+        "properties": {
+          "csv": {
+            "type": "string",
+            "description": "CSV text with headers and formula-escaped cells."
+          },
+          "filename": {
+            "type": "string"
+          },
+          "row_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 5000
+          }
+        }
+      },
+      "StaffResource": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role",
+          "active",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "Red Cross Administrator",
+              "Red Cross Personnel",
+              "Barangay Health Coordinator",
+              "Report Viewer",
+              "System Administrator"
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "StaffResult": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/StaffResource"
+          }
+        }
+      },
+      "StaffList": {
+        "type": "object",
+        "required": [
+          "data",
+          "roles",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffResource"
+            }
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Red Cross Administrator",
+                "Red Cross Personnel",
+                "Barangay Health Coordinator",
+                "Report Viewer",
+                "System Administrator"
+              ]
+            }
+          },
+          "meta": {
+            "type": "object",
+            "required": [
+              "total",
+              "current_page",
+              "last_page"
+            ],
+            "properties": {
+              "total": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "current_page": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "last_page": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      },
+      "UnitTrace": {
+        "type": "object",
+        "required": [
+          "id",
+          "reference",
+          "donation_reference",
+          "component",
+          "status",
+          "expires_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "donation_reference": {
+            "type": "string"
+          },
+          "component": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "description": "Stored inventory state; expiry is provided separately."
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "UnitTraceList": {
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UnitTrace"
+            }
+          },
+          "meta": {
+            "type": "object",
+            "required": [
+              "total",
+              "current_page",
+              "last_page"
+            ],
+            "properties": {
+              "total": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "current_page": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "last_page": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      },
+      "InventoryReportRow": {
+        "type": "object",
+        "required": [
+          "blood_type",
+          "component",
+          "location",
+          "stock_state",
+          "units"
+        ],
+        "properties": {
+          "blood_type": {
+            "type": "string"
+          },
+          "component": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "stock_state": {
+            "type": "string"
+          },
+          "units": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "DonationReportRow": {
+        "type": "object",
+        "required": [
+          "donated_on",
+          "status",
+          "units"
+        ],
+        "properties": {
+          "donated_on": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "voided"
+            ]
+          },
+          "units": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "ReportList": {
+        "type": "object",
+        "required": [
+          "data",
+          "meta",
+          "generated_at",
+          "scope"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/InventoryReportRow"
+                },
+                {
+                  "$ref": "#/components/schemas/DonationReportRow"
+                }
+              ]
+            }
+          },
+          "meta": {
+            "type": "object",
+            "required": [
+              "total",
+              "current_page",
+              "last_page"
+            ],
+            "properties": {
+              "total": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "current_page": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "last_page": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "scope": {
+            "type": "string"
+          }
+        }
+      },
+      "Publication": {
+        "type": "object",
+        "required": [
+          "id",
+          "payload",
+          "published_at",
+          "valid_until",
+          "withdrawn_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "payload": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "blood_type": {
+                  "type": "string",
+                  "maxLength": 3
+                },
+                "component": {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                "location": {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                "units": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "blood_type",
+                "component",
+                "location",
+                "units"
+              ]
+            }
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "valid_until": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "withdrawn_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "PublicationList": {
+        "type": "object",
+        "required": [
+          "data",
+          "locations"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "$ref": "#/components/schemas/Publication"
+            }
+          },
+          "locations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PublicationResult": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": [
+              "id",
+              "published_at"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "published_at": {
+                "type": "string",
+                "format": "date-time"
               }
             }
           }

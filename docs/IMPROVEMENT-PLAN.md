@@ -6,6 +6,14 @@ Status: connected local-development implementation delivered on 9 November 2026,
 
 ## Delivered status
 
+### Next implementation sequence (implementation complete; validation in progress)
+
+Authorized follow-up: traceability, connected reports/public availability, account administration and isolated MySQL/deployment validation. Browser automation is unavailable in this session; no hosting/mail service has been selected.
+
+Change manifest: modify inventory/donation/clinical controllers, Role/User, authentication middleware/provider, routes, connected views/controllers, test tooling, CI and existing documentation; add additive traceability/account/publication migrations, traceability/report/publication/account/recovery controllers, aggregate-publication model, public/recovery pages and feature/DOM tests. No source files or existing records are deleted. New API fields/routes are additive. Unlinked inventory remains identifiable; verification/release requires a recorded completed source donation after upgrade. Existing records must be linked explicitly, never guessed. Clinical association identifies the documentary donation only and does not introduce medical-release rules. Rollback uses feature commits while retaining additive data and verified backups; do not drop populated tables.
+
+Reports expose inventory aggregates to Report Viewers and Red Cross Administrators; donor/donation aggregates remain scoped to the requesting worker's assignments. Public counts require explicit administrator publication with selected location, public label and validity duration. No private names, bag references or clinical results enter the publication. Account administration belongs to System Administrators with password confirmation; disabling/changing access invalidates prior sessions and revokes donor grants. External reset-email delivery remains disabled until configured. Production cutover is not part of local implementation.
+
 - Versioned Red Cross Administrator-managed assignments, creator backfill and separate clinical grants; server-enforced assigned donor/history access.
 - Persistent donation events, correction/voiding, scoped filters and derived completed counts.
 - Inventory, explicit verification/stock transitions, spoilage labeling, expiry-ordered available candidates and event history.
