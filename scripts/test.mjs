@@ -44,5 +44,5 @@ if (mode === 'backend' || mode === 'mysql' || mode === 'all') {
     Object.assign(env, { DB_CONNECTION: 'mysql', DB_DATABASE: 'blood_repository_ci' });
   }
   run(php, ['artisan', 'config:clear', '--no-interaction'], backend, env);
-  run(php, mode === 'mysql' ? ['artisan', 'test', '--compact', '--configuration=phpunit.mysql.xml', '--exclude-group=sqlite-only'] : ['artisan', 'test', '--compact'], backend, env);
+  run(php, mode === 'mysql' ? ['vendor/bin/phpunit', '--configuration=phpunit.mysql.xml'] : ['artisan', 'test', '--compact'], backend, env);
 }
