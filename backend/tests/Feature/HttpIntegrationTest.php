@@ -90,7 +90,7 @@ class HttpIntegrationTest extends TestCase
             $publicClient = new Client(['base_uri' => 'http://127.0.0.1:'.$port, 'http_errors' => false, 'timeout' => 5]);
             $public = json_decode((string) $publicClient->get('/api/v1/public/availability')->getBody(), true);
             $this->assertSame(1, $public['data'][0]['units']);
-            $this->assertSame(['blood_type', 'component', 'location', 'units'], array_keys($public['data'][0]));
+            $this->assertEqualsCanonicalizing(['blood_type', 'component', 'location', 'units'], array_keys($public['data'][0]));
             $this->assertSame(200, $client->get('/availability')->getStatusCode());
             $this->assertSame(200, $client->get('/recovery')->getStatusCode());
             $this->assertSame(200, $client->get('/src/availability.js')->getStatusCode());

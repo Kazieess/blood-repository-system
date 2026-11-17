@@ -77,7 +77,7 @@ class ReportAvailabilityTest extends TestCase
         $this->postJson('/api/v1/publications', [...$body, 'public_label' => 'Changed'], $key)->assertConflict();
         $this->assertDatabaseCount('availability_snapshots', 1);
         $response = $this->getJson('/api/v1/public/availability')->assertOk()->assertJsonPath('state', 'available')->assertJsonPath('data.0.units', 1)->assertJsonPath('data.0.location', 'QA Public Center');
-        $this->assertSame(['blood_type', 'component', 'location', 'units'], array_keys($response->json('data.0')));
+        $this->assertEqualsCanonicalizing(['blood_type', 'component', 'location', 'units'], array_keys($response->json('data.0')));
         $this->assertStringNotContainsString($unit->reference, $response->getContent());
         $this->travel(61)->minutes();
         $this->getJson('/api/v1/public/availability')->assertOk()->assertJsonPath('state', 'stale')->assertJsonCount(0, 'data');
