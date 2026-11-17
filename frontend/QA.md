@@ -8,7 +8,7 @@ Review date: 18 November 2026.
 - 45 frontend tests pass. The new connected operations scenario covers review-before-write, uncertain retries, unsaved entries, Philippine time conversion, stock verification, assignment grants, catalog/results, independent review, alert acknowledgement, isolated restore confirmation and clearing on sign-out.
 - Regression checks also cover late private responses after sign-out/navigation, public-count expiry during refresh, publication retry conflicts, revoked administrator/password sessions and rejection of file-backed SQLite test targets.
 - New screens and modules use the existing same-origin authenticated workspace and contain no demo-store imports.
-- Native/browser automation hosts were unavailable; pixel/device/screen-reader review remains outstanding. MySQL and production recovery are not verified.
+- Native/browser automation hosts were unavailable; pixel/device/screen-reader review remains outstanding. Production MySQL recovery is not verified.
 
 ## Historical foundation and Phase 2 checks
 
@@ -32,7 +32,7 @@ Suggested review: public hero and navigation; locator normal/stale/unavailable; 
 
 ## Intentional limits
 
-The static `index.html` remains a fictional demo whose records reset on reload. The separate Laravel `/workspace` entry uses real cookie authentication, server authorization, persisted donor profiles and restricted audit access. Its frontend scope is documented in `PHASE-2.md`. Recorded clinical information, inventory, shortage jobs and local SQLite isolated recovery are now connected as described in IMPROVEMENTS.md. External SMS, official public stock and production recovery remain separate work. Passing DOM tests does not establish production readiness.
+The static `index.html` remains a fictional demo whose records reset on reload. The separate Laravel `/workspace` entry uses real cookie authentication, server authorization, persisted donor profiles and restricted audit access. Its frontend scope is documented in `PHASE-2.md`. Recorded clinical information, inventory, shortage jobs and local SQLite isolated recovery are now connected as described in IMPROVEMENTS.md. Explicit public snapshots and aggregate reports are connected. External SMS, production publication approval and production recovery remain separate work. Passing DOM tests does not establish production readiness.
 
 ## Backend foundation verification
 
@@ -47,3 +47,5 @@ Earlier checks for the backend foundation (before this frontend milestone):
 - On Windows, the real-HTTP test needs permission to clean up its temporary process tree; the sandbox's taskkill restriction can hang cleanup. It was run successfully outside the sandbox. The HTTP test uses its own temporary database and stops its own server.
 
 The two existing stylesheet files now live in css/, and both static and backend-served entries reference that location.
+
+Verified on 18 November 2026: [GitHub Actions run 44144278513](https://github.com/Kazieess/blood-repository-system/actions/runs/44144278513) passed frontend checks on Windows/Linux (45 tests each), SQLite backend checks (59 tests, 510 assertions) and isolated MySQL 8.4.13 checks (55 tests, 444 assertions). SQLite-specific backup and HTTP tests run in the SQLite job. This is automated compatibility evidence, not production recovery or browser acceptance.

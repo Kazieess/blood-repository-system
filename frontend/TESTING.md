@@ -14,7 +14,7 @@ Use this guide to test the currently implemented frontend and backend foundation
 
 The demo's role selector does not sign you into the connected workspace. Demo changes reset on reload; connected saves persist. Assigned donation history, inventory, in-app alerts, restricted clinical records and local SQLite recovery are now connected. Follow [the improvements walkthrough](IMPROVEMENTS.md) for their setup and checks. Connected traceability, reports, publication and staff-account checks are also in that walkthrough. Public availability, reports and external SMS in the independent demo remain illustrations.
 
-Use fictional test data. Local browser testing writes to your configured development database; automated backend tests use isolated SQLite databases. Do not use a production database for these steps. MySQL validation and production readiness remain separate work.
+Use fictional test data. Local browser testing writes to your configured development database; automated backend tests use isolated SQLite databases. Do not use a production database for these steps. A separate isolated MySQL 8.4.13 CI suite has passed; production environment validation remains separate work.
 
 ## 2. Open the project folder
 
@@ -279,6 +279,8 @@ Blocked or not-run checks:
 Follow-up needed:
 ```
 
-Also complete the [connected improvements walkthrough](IMPROVEMENTS.md): assignments, donation counts and source links, stock transitions/expiry, recipient alerts, clinical recording/review, isolated SQLite recovery, aggregate reports/publication and staff/password administration. Passing these checks validates the current local milestone. It does not establish clinical interpretation, security/load acceptance, MySQL compatibility, production backup restoration or release readiness. Browser/device and screen-reader checks need observed results; DOM tests alone do not establish them.
+Also complete the [connected improvements walkthrough](IMPROVEMENTS.md): assignments, donation counts and source links, stock transitions/expiry, recipient alerts, clinical recording/review, isolated SQLite recovery, aggregate reports/publication and staff/password administration. Passing these checks validates the current local milestone. It does not establish clinical interpretation, security/load acceptance, production MySQL configuration, production backup restoration or release readiness. Browser/device and screen-reader checks need observed results; DOM tests alone do not establish them.
 
 Related references: [Phase 2 scope](PHASE-2.md), [verification notes](QA.md), [frontend routes](README.md), [backend setup](../backend/README.md), [permission matrix and acceptance criteria](../docs/backend/FOUNDATION.md).
+
+Verified on 18 November 2026: [GitHub Actions run 44144278513](https://github.com/Kazieess/blood-repository-system/actions/runs/44144278513) passed frontend checks on Windows/Linux (45 tests each), SQLite backend checks (59 tests, 510 assertions) and isolated MySQL 8.4.13 checks (55 tests, 444 assertions). SQLite-specific backup and HTTP tests run in the SQLite job. This is automated compatibility evidence, not production recovery or browser acceptance.

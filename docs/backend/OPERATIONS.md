@@ -69,7 +69,7 @@ SQLite snapshot implementation uses [VACUUM INTO](https://www.sqlite.org/lang_va
 
 Rollback: revert the corresponding feature commits and preserve a verified database snapshot first. Do not roll back/drop additive event tables on populated data merely to undo a UI change. No destructive migration command is part of normal setup.
 
-## Connected completion milestone (9 November 2026)
+## Connected completion milestone (verified 18 November 2026)
 
 ### Traceability
 
@@ -98,3 +98,5 @@ REPOSITORY_PASSWORD_RESET_EMAIL defaults false. Configure an approved mail servi
 The MySQL CI job uses a disposable blood_repository_ci service database. Explicit REPOSITORY_MYSQL_TEST=isolated is required; normal tests continue using isolated SQLite. SQLite backup and temporary HTTP-server tests are excluded from the MySQL job and remain covered in the SQLite job. Neither passing MySQL feature tests nor the read-only repository:deployment-check command establishes production MySQL backup/restore, load capacity or deployment readiness.
 
 The deployment check prints pass/fail labels only for environment, debug, HTTPS URL, session cookie settings, key presence, MySQL selection, writable directories, connectivity, migrations and recent scheduler heartbeat. Scheduler heartbeat runs every minute alongside stock evaluation. No hosting/mail provider has been selected. Hosting/TLS verification, production recovery/offsite retention, browser/device/accessibility acceptance and load testing remain pending. Follow [Laravel deployment guidance](https://laravel.com/framework/docs/13.x/deployment) when an approved host is selected. Do not configure a production database as a disposable test target.
+
+Verified on 18 November 2026: [GitHub Actions run 44144278513](https://github.com/Kazieess/blood-repository-system/actions/runs/44144278513) passed frontend checks on Windows/Linux (45 tests each), SQLite backend checks (59 tests, 510 assertions) and isolated MySQL 8.4.13 checks (55 tests, 444 assertions). SQLite-specific backup and HTTP tests run in the SQLite job. This is automated compatibility evidence, not production recovery or browser acceptance.

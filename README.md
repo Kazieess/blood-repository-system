@@ -105,3 +105,5 @@ git status
 ```
 
 Never commit actual donor data, credentials or copied development databases, even to the private repository. Review staged paths and diffs before committing. [GitHub workflow](.github/workflows/tests.yml) follows the upstream [checkout](https://github.com/actions/checkout), [Node setup](https://github.com/actions/setup-node) and [PHP setup](https://github.com/shivammathur/setup-php) documentation.
+
+Verified on 18 November 2026: [GitHub Actions run 44144278513](https://github.com/Kazieess/blood-repository-system/actions/runs/44144278513) passed frontend checks on Windows/Linux (45 tests each), SQLite backend checks (59 tests, 510 assertions) and isolated MySQL 8.4.13 checks (55 tests, 444 assertions). SQLite-specific backup and HTTP tests run in the SQLite job. This is automated compatibility evidence, not production recovery or browser acceptance.
