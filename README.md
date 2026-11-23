@@ -2,7 +2,7 @@
 
 Davao del Sur Blood Repository and Donor Monitoring System: an independent interface demo and a Laravel-connected staff workspace. This is a development baseline, not a production release.
 
-The connected workspace implements session authentication, explicit Red Cross assignments, donation history/counts, controlled inventory, recipient-scoped alerts, encrypted clinical entries/revisions, restricted audit and actual local SQLite backup/isolated recovery. The next milestone adds donation-to-unit traceability, aggregate reports/CSV exports, explicit public stock publication, staff-account administration and password recovery/change workflows. See [the improvements walkthrough](frontend/IMPROVEMENTS.md) and [implementation decisions](docs/backend/OPERATIONS.md). No clinical test panels, thresholds or automated medical decisions are seeded.
+The connected workspace implements session authentication, explicit Red Cross assignments, donation history/counts, controlled inventory, recipient-scoped alerts, encrypted clinical entries/revisions, restricted audit and actual local SQLite backup/isolated recovery. It also includes donation-to-unit traceability, aggregate reports/CSV exports, explicit public stock publication, staff-account administration and password recovery/change workflows. See [the improvements walkthrough](frontend/IMPROVEMENTS.md) and [implementation decisions](docs/backend/OPERATIONS.md). No clinical test panels, thresholds or automated medical decisions are seeded.
 
 ## Start an already configured local system
 
