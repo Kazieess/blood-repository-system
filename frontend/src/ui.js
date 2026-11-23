@@ -24,9 +24,10 @@ export function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 }
 export function initials(name) { return name.split(' ').map(part => part[0] ?? '').slice(0, 2).join(''); }
+const dateFormatter = new Intl.DateTimeFormat('en-PH', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Manila' });
 export function dateLabel(value) {
   if (!value) return 'No donation recorded';
-  return new Intl.DateTimeFormat('en-PH', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Manila' }).format(new Date(`${value}T12:00:00+08:00`));
+  return dateFormatter.format(new Date(`${value}T12:00:00+08:00`));
 }
 export function badge(status) {
   const tone = { Eligible: 'success', Active: 'success', Available: 'success', 'Sample success': 'success', 'Simulated delivery': 'success', Deferred: 'muted', 'For review': 'warning', 'Pending verification': 'warning', Queued: 'warning', Failed: 'danger', Quarantined: 'danger', Discarded: 'muted' }[status] ?? 'muted';

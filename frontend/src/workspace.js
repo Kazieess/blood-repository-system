@@ -220,5 +220,5 @@ function networkStatus() {
 window.addEventListener('offline', networkStatus);
 window.addEventListener('online', () => { networkStatus(); toast('Connection restored. Retry or refresh the current view when ready.'); });
 networkStatus(); hydrate();
-try { const result = await api.me(); user = result.data; await api.csrf(); await render(false); }
+try { const result = await api.me(); user = result.data; await render(false); }
 catch (error) { user = null; await render(false); if (error.status !== 401) toast(errorText(error)); }

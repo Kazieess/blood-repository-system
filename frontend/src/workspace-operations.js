@@ -71,10 +71,14 @@ export class WorkspaceOperations {
     const query = '?' + params;
     const state = { section, id, params: new URLSearchParams(params) };
     if (section === 'donations' || section === 'clinical' || section === 'trace') {
-      state.donor = (await get(`/donors/${enc(id)}`, signal)).data;
-      if (section === 'trace') state.data = await get(`/donors/${enc(id)}/units${query}`, signal);
-      else if (section === 'donations') state.data = await get(`/donors/${enc(id)}/donations${query}`, signal);
-      else {
+      if (section === 'trace' || section === 'donations') {
+        const [donor, records] = await Promise.all([
+          get(`/donors/${enc(id)}`, signal),
+          get(`/donors/${enc(id)}/${section === 'trace' ? 'units' : 'donations'}${query}`, signal),
+        ]);
+        state.donor = donor.data; state.data = records;
+      } else {
+        state.donor = (await get(`/donors/${enc(id)}`, signal)).data;
         state.category = params.get('category') || ['screening', 'laboratory', 'eligibility'].find(category => state.donor.clinical_permissions.includes(category + '.read')) || 'screening';
         state.data = await get(`/donors/${enc(id)}/clinical/${enc(state.category)}${query}`, signal);
       }

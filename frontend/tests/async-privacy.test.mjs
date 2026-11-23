@@ -5,6 +5,7 @@ import { WorkspaceOperations } from '../src/workspace-operations.js';
 
 function setup() {
   const browser = new Window({ url: 'http://127.0.0.1:8000/workspace' });
+  browser.document.cookie = 'XSRF-TOKEN=fictional-test; path=/';
   browser.document.body.innerHTML = '<main id="main"></main><dialog id="record-dialog"></dialog>';
   for (const key of ['window', 'document', 'location', 'Element', 'HTMLElement', 'HTMLInputElement', 'HTMLSelectElement', 'HTMLFormElement', 'HTMLDialogElement', 'FormData']) globalThis[key] = key === 'window' ? browser : browser[key];
   let user = { id: 1, permissions: ['reports.read', 'donors.read'] };
@@ -68,6 +69,8 @@ test('public counts still expire while a refresh response is pending', async () 
   try {
     await import('../src/availability.js');
     await waitFor(() => browser.document.querySelector('.availability-grid'));
+    browser.dispatchEvent(new browser.Event('pageshow'));
+    assert.equal(calls, 1, 'initial pageshow must not restart the completed first request');
     browser.document.querySelector('#refresh-availability').click();
     await waitFor(() => resolve);
     assert.equal(typeof expire, 'function', 'refresh must retain the existing expiry timer');

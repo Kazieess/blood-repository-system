@@ -77,3 +77,9 @@ Explicit donor assignments, recorded donation history/counts, inventory/expiry/s
 Recorded connected baseline: 59 backend tests and 45 frontend checks passed. The real-HTTP test requires normal Windows process-cleanup permissions; inside a restricted sandbox, run it with the appropriate approval so taskkill can stop its temporary server. A fresh run's output is the evidence for that run.
 
 Verified on 18 November 2026: [GitHub Actions run 44144278513](https://github.com/Kazieess/blood-repository-system/actions/runs/44144278513) passed frontend checks on Windows/Linux (45 tests each), SQLite backend checks (59 tests, 510 assertions) and isolated MySQL 8.4.13 checks (55 tests, 444 assertions). SQLite-specific backup and HTTP tests run in the SQLite job. This is automated compatibility evidence, not production recovery or browser acceptance.
+
+## Local server performance (21 November 2026)
+
+The Windows `start.cmd` shortcut and `scripts/backend.ps1 -Action serve` start PHP directly through `backend/server.php`, with `backend/public` as the document root. The wrapper checks the PHP version, dependency/configuration presence, and occupied ports. Available OPcache is enabled for this process only, with timestamp validation on every request; no global PHP configuration is edited. Stop and restart after `.env` changes. Other setup/user/test/scheduler actions retain their existing purpose.
+
+Existing public CSS, JavaScript, and PNG assets are served before Laravel bootstrap using a strict path/extension allowlist, MIME types, `nosniff`, and content-based ETags. Browsers must revalidate cached assets, so edited files are refreshed. Assets do not open sessions or create cookies. Staff pages and API requests still pass through Laravel authentication, CSRF, authorization, and private/no-store response handling. This local server is not a production deployment.

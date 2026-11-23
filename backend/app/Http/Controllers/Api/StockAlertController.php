@@ -29,11 +29,10 @@ class StockAlertController extends Controller
     public function saveRule(Request $request, StockEvaluator $evaluator): JsonResponse
     {
         abort_unless($request->user()->hasPermission('alerts.manage'), 403);
-        $input = $request->validate(['id' => ['nullable', 'integer'], 'version' => ['required', 'integer', 'min:0'], 'blood_type' => ['required', Rule::in(['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'])], 'component' => ['required', 'string', 'min:2', 'max:80'], 'location' => ['required', 'string', 'min:2', 'max:100'], 'threshold' => ['required', 'integer', 'between:0,999999'], 'recipient_ids' => ['required', 'array', 'min:1', 'max:100'], 'recipient_ids.*' => ['required', 'integer', 'distinct', 'exists:users,id'], 'active' => ['required', 'boolean'], 'reason' => ['required', 'string', 'min:3', 'max:500']]);
+        $input = $request->validate(['id' => ['nullable', 'integer'], 'version' => ['required', 'integer', 'min:0'], 'blood_type' => ['required', Rule::in(['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'])], 'component' => ['required', 'string', 'min:2', 'max:80'], 'location' => ['required', 'string', 'min:2', 'max:100'], 'threshold' => ['required', 'integer', 'between:0,999999'], 'recipient_ids' => ['bail', 'required', 'array', 'min:1', 'max:100', 'exists:users,id'], 'recipient_ids.*' => ['required', 'integer', 'distinct'], 'active' => ['required', 'boolean'], 'reason' => ['required', 'string', 'min:3', 'max:500']]);
         $input['recipient_ids'] = array_map('intval', $input['recipient_ids']);
-        foreach ($input['recipient_ids'] as $recipient) {
-            abort_unless(User::findOrFail($recipient)->hasPermission('inventory.read'), 422, 'Choose active inventory staff.');
-        }
+        $recipients = User::with('role')->whereKey($input['recipient_ids'])->get();
+        abort_unless($recipients->count() === count($input['recipient_ids']) && $recipients->every(fn ($recipient) => $recipient->hasPermission('inventory.read')), 422, 'Choose active inventory staff.');
         try {
             $record = DB::transaction(function () use ($request, $input, $evaluator): StockRule {
                 $fields = Arr::only($input, ['blood_type', 'component', 'location', 'threshold', 'recipient_ids', 'active']);
@@ -66,12 +65,13 @@ class StockAlertController extends Controller
     {
         abort_unless($request->user()->hasPermission('inventory.read'), 403);
         $request->validate(['page' => ['nullable', 'integer', 'min:1']]);
-        $rules = StockRule::where('active', true)->get()->filter(fn ($rule) => in_array($request->user()->id, $rule->recipient_ids, true));
+        $rules = StockRule::where('active', true)->whereJsonContains('recipient_ids', (int) $request->user()->id)->get();
         $records = StockAlert::whereIn('stock_rule_id', $rules->pluck('id'))->orderByDesc('open')->latest('id')->paginate(10);
-        $data = collect($records->items())->map(function ($alert) use ($rules, $request): array {
+        $receipts = AlertReceipt::where('user_id', $request->user()->id)->whereIn('stock_alert_id', collect($records->items())->pluck('id'))->pluck('acknowledged_at', 'stock_alert_id');
+        $data = collect($records->items())->map(function ($alert) use ($rules, $receipts): array {
             $rule = $rules->firstWhere('id', $alert->stock_rule_id);
 
-            return ['id' => $alert->id, 'blood_type' => $rule->blood_type, 'component' => $rule->component, 'location' => $rule->location, 'condition' => $alert->condition, 'available_count' => $alert->available_count, 'threshold' => $rule->threshold, 'open' => $alert->open, 'resolved_at' => $alert->resolved_at, 'updated_at' => $alert->updated_at, 'acknowledged_at' => AlertReceipt::where('stock_alert_id', $alert->id)->where('user_id', $request->user()->id)->value('acknowledged_at')];
+            return ['id' => $alert->id, 'blood_type' => $rule->blood_type, 'component' => $rule->component, 'location' => $rule->location, 'condition' => $alert->condition, 'available_count' => $alert->available_count, 'threshold' => $rule->threshold, 'open' => $alert->open, 'resolved_at' => $alert->resolved_at, 'updated_at' => $alert->updated_at, 'acknowledged_at' => $receipts->get($alert->id)];
         });
 
         $unacknowledged = StockAlert::whereIn('stock_rule_id', $rules->pluck('id'))->where('open', true)->whereNotExists(function ($query) use ($request): void {

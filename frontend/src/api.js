@@ -8,16 +8,37 @@ function csrfToken() {
   const cookie = document.cookie.split('; ').find(value => value.startsWith('XSRF-TOKEN='));
   return cookie ? decodeURIComponent(cookie.slice('XSRF-TOKEN='.length)) : '';
 }
+let csrfRequest;
+function prepareCsrf(signal) {
+  if (signal?.aborted) return Promise.reject(new DOMException('Request cancelled.', 'AbortError'));
+  if (!csrfRequest) csrfRequest = request('/sanctum/csrf-cookie').finally(() => { csrfRequest = null; });
+  if (!signal) return csrfRequest;
+  // A caller can leave promptly without cancelling preparation needed by another write.
+  return new Promise((resolve, reject) => {
+    const cancel = () => { signal.removeEventListener('abort', cancel); reject(new DOMException('Request cancelled.', 'AbortError')); };
+    signal.addEventListener('abort', cancel, { once: true });
+    csrfRequest.then(
+      value => { signal.removeEventListener('abort', cancel); resolve(value); },
+      error => { signal.removeEventListener('abort', cancel); reject(error); },
+    );
+  });
+}
 export async function request(path, { method = 'GET', body, signal, headers: extraHeaders = {}, timeoutMs = 15000 } = {}) {
   const headers = { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest', ...extraHeaders };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
-  if (!['GET', 'HEAD'].includes(method)) headers['X-XSRF-TOKEN'] = csrfToken();
+  const writes = !['GET', 'HEAD'].includes(method);
   const controller = new AbortController();
   let timedOut = false;
   const cancel = () => controller.abort();
   if (signal?.aborted) controller.abort(); else signal?.addEventListener('abort', cancel, { once: true });
   const timer = setTimeout(() => { timedOut = true; controller.abort(); }, timeoutMs);
   try {
+    if (controller.signal.aborted) throw new DOMException('Request cancelled.', 'AbortError');
+    if (writes) {
+      if (!csrfToken()) await prepareCsrf(controller.signal);
+      if (controller.signal.aborted) throw new DOMException('Request cancelled.', 'AbortError');
+      headers['X-XSRF-TOKEN'] = csrfToken();
+    }
     const response = await fetch(path, { method, headers, credentials: 'same-origin', body: body === undefined ? undefined : JSON.stringify(body), signal: controller.signal });
     let payload = null;
     if (response.status !== 204) {
@@ -39,7 +60,7 @@ export async function request(path, { method = 'GET', body, signal, headers: ext
   }
 }
 export const api = {
-  csrf: () => request('/sanctum/csrf-cookie'),
+  csrf: prepareCsrf,
   me: () => request('/api/v1/me'),
   async login(email, password) { await this.csrf(); return request('/api/v1/auth/login', { method: 'POST', body: { email, password } }); },
   logout: () => request('/api/v1/auth/logout', { method: 'POST' }),

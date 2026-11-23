@@ -22,5 +22,5 @@ async function refresh() {
 main.addEventListener('click', event => { if (event.target.closest('#refresh-availability')) refresh(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) { clearTimeout(timer); controller?.abort(); } else refresh(); });
 window.addEventListener('pagehide', () => { controller?.abort(); clearTimeout(timer); clearTimeout(expiryTimer); });
-window.addEventListener('pageshow', refresh);
+window.addEventListener('pageshow', event => { if (event.persisted) refresh(); });
 refresh();

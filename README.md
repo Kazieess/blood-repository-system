@@ -4,6 +4,18 @@ Davao del Sur Blood Repository and Donor Monitoring System: an independent inter
 
 The connected workspace implements session authentication, explicit Red Cross assignments, donation history/counts, controlled inventory, recipient-scoped alerts, encrypted clinical entries/revisions, restricted audit and actual local SQLite backup/isolated recovery. The next milestone adds donation-to-unit traceability, aggregate reports/CSV exports, explicit public stock publication, staff-account administration and password recovery/change workflows. See [the improvements walkthrough](frontend/IMPROVEMENTS.md) and [implementation decisions](docs/backend/OPERATIONS.md). No clinical test panels, thresholds or automated medical decisions are seeded.
 
+## Start an already configured local system
+
+From the project root in a Windows terminal:
+
+```powershell
+.\start.cmd
+```
+
+Keep the terminal open and visit **http://127.0.0.1:8000/workspace**. Stop with **Ctrl+C**. If the project server is already running, use it instead of starting another. To choose a different available port, run `.\start.cmd -Port 8001` and use the printed URL. Restart the server after changing `.env`.
+
+First-time dependency installation, database setup, and account creation are still required on a new checkout; follow the next section. The full guide is [frontend/TESTING.md](frontend/TESTING.md).
+
 ## Reproduce the development environment
 
 Private repository: https://github.com/Kazieess/blood-repository-system. Authorized collaborators can clone it with:

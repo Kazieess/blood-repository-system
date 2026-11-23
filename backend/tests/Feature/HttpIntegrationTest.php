@@ -39,7 +39,7 @@ class HttpIntegrationTest extends TestCase
             $user->setConnection('http_smoke')->save();
             $email = $user->email;
 
-            $server = new Process([PHP_BINARY, '-S', '127.0.0.1:'.$port, base_path('vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php')], public_path(), $environment);
+            $server = new Process([PHP_BINARY, '-S', '127.0.0.1:'.$port, base_path('server.php')], public_path(), $environment);
             $server->disableOutput();
             $server->start();
             $jar = new CookieJar;
@@ -59,6 +59,26 @@ class HttpIntegrationTest extends TestCase
             }
 
             $this->assertTrue($ready, 'Isolated HTTP test server did not become ready.');
+            $asset = $client->get('/src/api.js');
+            $this->assertSame(200, $asset->getStatusCode());
+            $this->assertSame('text/javascript; charset=utf-8', $asset->getHeaderLine('Content-Type'));
+            $this->assertSame('', $asset->getHeaderLine('Set-Cookie'));
+            $this->assertSame('', $asset->getHeaderLine('X-Request-ID'));
+            $this->assertSame('public, max-age=0, must-revalidate', $asset->getHeaderLine('Cache-Control'));
+            $etag = $asset->getHeaderLine('ETag');
+            $this->assertSame('"'.hash_file('sha256', base_path('../frontend/src/api.js')).'"', $etag);
+            $cached = $client->get('/src/api.js', ['headers' => ['If-None-Match' => $etag]]);
+            $this->assertSame(304, $cached->getStatusCode());
+            $this->assertSame('', (string) $cached->getBody());
+            $this->assertSame('', $cached->getHeaderLine('Set-Cookie'));
+            $this->assertSame(200, $client->get('/src/api.js', ['headers' => ['If-None-Match' => '"old-content"']])->getStatusCode());
+            $head = $client->head('/src/api.js');
+            $this->assertSame(200, $head->getStatusCode());
+            $this->assertSame('', (string) $head->getBody());
+            $this->assertSame($etag, $head->getHeaderLine('ETag'));
+            foreach (['/.env', '/backend/database/database.sqlite', '/src/missing.js', '/css/%2e%2e%2fREADME.md'] as $privatePath) {
+                $this->assertSame(404, $client->get($privatePath)->getStatusCode());
+            }
             $this->assertSame(401, $client->get('/api/v1/me')->getStatusCode());
             $this->assertSame(419, $client->post('/api/v1/auth/login', ['json' => ['email' => $email, 'password' => 'password']])->getStatusCode());
             $this->assertSame(204, $client->get('/sanctum/csrf-cookie')->getStatusCode());

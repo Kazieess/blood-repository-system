@@ -56,6 +56,16 @@ Password entry is hidden. No default login or shared password is provided. Do no
 
 ### Start the server
 
+For an already configured system, the shortest Windows command from the project root is:
+
+```powershell
+.\start.cmd
+```
+
+The shortcut uses the same local server wrapper below. Use `.\start.cmd -Port 8001` if you deliberately need a different available port. Keep one server running; an occupied port is reported rather than silently switching URLs. Restart after editing `.env`. No setup, migration, or account recreation is needed for an ordinary restart.
+
+The full equivalent command remains:
+
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\backend.ps1" -Action serve
 ```
@@ -215,7 +225,7 @@ Run all frontend tests:
 npm.cmd test
 ```
 
-Expected current baseline: **45 passing tests**, zero failures and zero skipped tests. These cover the demo model/workflow, selected contrast pairs, connected DOM workflows, API-client behavior, workspace views and asset references. The connected DOM scenario simulates HTTP responses; it does not prove a live browser-to-database workflow. Use the manual connected checklist and backend HTTP suite for that boundary.
+Expected current baseline: **51 passing tests**, zero failures and zero skipped tests. These cover the demo model/workflow, selected contrast pairs, connected DOM workflows, API-client behavior, workspace views and asset references. The connected DOM scenario simulates HTTP responses; it does not prove a live browser-to-database workflow. Use the manual connected checklist and backend HTTP suite for that boundary.
 
 Syntax-only checks:
 
@@ -233,7 +243,7 @@ The new cross-platform entry also supports `npm.cmd run test:backend`, or `npm.c
 powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\backend.ps1" -Action test
 ```
 
-Expected recorded connected baseline: **59 passing tests with 510 assertions**; test counts may change as features are added. Check the actual run's result rather than assuming this baseline proves a fresh pass.
+Expected recorded connected baseline: **63 passing tests with 557 assertions**; test counts may change as features are added. Check the actual run's result rather than assuming this baseline proves a fresh pass.
 
 The suite covers real authentication and authorization, validation, persistence, idempotency, stale corrections, transactional audit behavior, safe errors, asset delivery and an actual HTTP session/CSRF flow. It uses isolated SQLite data, not the manually populated development records. It does not establish MySQL compatibility.
 

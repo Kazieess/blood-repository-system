@@ -3,11 +3,14 @@
 namespace Tests\Feature;
 
 use App\Actions\StockEvaluator;
+use App\Models\AlertReceipt;
 use App\Models\AuditLog;
 use App\Models\BloodUnit;
 use App\Models\Donation;
 use App\Models\Donor;
 use App\Models\Role;
+use App\Models\StockAlert;
+use App\Models\StockRule;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -164,5 +167,62 @@ class InventoryAlertTest extends TestCase
             AuditLog::flushEventListeners();
         }
 
+    }
+
+    public function test_alert_polling_batches_receipts_without_exposing_other_recipients(): void
+    {
+        $worker = $this->staff('Red Cross Personnel');
+        $other = $this->staff('Red Cross Personnel');
+        $alerts = [];
+        for ($index = 0; $index < 10; $index++) {
+            $rule = StockRule::create(['blood_type' => 'O+', 'component' => 'QA component', 'location' => 'QA location '.$index, 'threshold' => 1, 'recipient_ids' => [$worker->id, $other->id], 'active' => true, 'version' => 1]);
+            $alerts[] = StockAlert::create(['stock_rule_id' => $rule->id, 'open_rule_id' => $rule->id, 'condition' => 'out_of_stock', 'available_count' => 0, 'open' => true]);
+        }
+        $privateRule = StockRule::create(['blood_type' => 'O+', 'component' => 'QA component', 'location' => 'QA private location', 'threshold' => 1, 'recipient_ids' => [$other->id], 'active' => true, 'version' => 1]);
+        StockAlert::create(['stock_rule_id' => $privateRule->id, 'open_rule_id' => $privateRule->id, 'condition' => 'out_of_stock', 'available_count' => 0, 'open' => true]);
+        AlertReceipt::create(['stock_alert_id' => $alerts[0]->id, 'user_id' => $worker->id, 'acknowledged_at' => now()]);
+        AlertReceipt::create(['stock_alert_id' => $alerts[1]->id, 'user_id' => $other->id, 'acknowledged_at' => now()]);
+        $this->signIn($worker);
+        DB::enableQueryLog();
+        DB::flushQueryLog();
+        try {
+            $response = $this->getJson('/api/v1/stock-alerts')->assertOk()->assertJsonPath('meta.total', 10)->assertJsonPath('configured_scopes', 10)->assertJsonPath('unacknowledged_open_count', 9);
+            $queries = DB::getQueryLog();
+        } finally {
+            DB::disableQueryLog();
+            DB::flushQueryLog();
+        }
+        $rows = collect($response->json('data'))->keyBy('id');
+        $this->assertNotNull($rows[$alerts[0]->id]['acknowledged_at']);
+        $this->assertNull($rows[$alerts[1]->id]['acknowledged_at']);
+        $this->assertStringNotContainsString('QA private location', $response->getContent());
+        $receiptReads = array_filter($queries, fn ($query) => str_starts_with(strtolower($query['query']), 'select') && str_contains($query['query'], 'alert_receipts'));
+        $this->assertLessThanOrEqual(2, count($receiptReads), 'Polling must not read acknowledgement rows separately for every displayed alert.');
+    }
+
+    public function test_rule_recipient_validation_batches_users_and_rejects_ineligible_accounts(): void
+    {
+        $admin = $this->staff();
+        $role = Role::firstOrCreate(['name' => 'Red Cross Personnel']);
+        $workers = User::factory()->count(10)->create(['role_id' => $role->id, 'active' => true]);
+        $this->signIn($admin);
+        $body = ['version' => 0, 'blood_type' => 'O+', 'component' => 'QA component', 'location' => 'QA store', 'threshold' => 1, 'recipient_ids' => $workers->pluck('id')->all(), 'active' => true, 'reason' => 'QA recipient validation'];
+        DB::enableQueryLog();
+        DB::flushQueryLog();
+        try {
+            $this->postJson('/api/v1/stock-rules', $body)->assertOk();
+            $queries = DB::getQueryLog();
+        } finally {
+            DB::disableQueryLog();
+            DB::flushQueryLog();
+        }
+        $userReads = array_filter($queries, fn ($query) => str_starts_with(strtolower($query['query']), 'select') && preg_match('/\bfrom\s+["`]?users["`]?/i', $query['query']));
+        $this->assertLessThanOrEqual(3, count($userReads), 'Validating recipients must not issue a user query for every selected staff member.');
+        $inactive = User::factory()->create(['role_id' => $role->id, 'active' => false]);
+        $viewer = $this->staff('Report Viewer');
+        foreach ([$inactive->id, $viewer->id, 999999999] as $id) {
+            $this->postJson('/api/v1/stock-rules', [...$body, 'location' => 'QA denied '.$id, 'recipient_ids' => [$id]])->assertUnprocessable();
+        }
+        $this->assertDatabaseCount('stock_rules', 1);
     }
 }
